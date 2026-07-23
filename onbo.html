@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.2.2</title>
+<title>온보 스튜디오 — pre-alpha v0.2.3</title>
 
 <!-- 이벤트 계약: 유일 정의처. 셸 계측·L1 판정 모두 이 블록만 참조 (GAP-1 해소) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.2.2","steps":[
+{"version":"0.2.3","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -83,7 +83,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge" id="verbadge">PRE-ALPHA v0.2.2 · 내부용</span>
+  <span class="badge" id="verbadge">PRE-ALPHA v0.2.3 · 내부용</span>
 </header>
 <main>
 
@@ -153,7 +153,7 @@
 
 </main>
 <footer>
-  <span>v0.2.2 · 엔진=스텁</span>
+  <span>v0.2.3 · 엔진=스텁</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사 · 회신은 이 한 줄이면 됨">RV|—</span>
   <div class="row" style="margin:0">
@@ -233,7 +233,7 @@ function framesB(name, desc, f){ return [
 
 /* ================= 앱 셸 ================= */
 var app = (function(){
-  var state = { vertical:null, name:"", desc:"", feats:[], scenes:[], selected:-1, mode:"a" }; // mode a=placeholder(★)
+  var state = { vertical:null, name:"", desc:"", feats:[], scenes:[], selected:-1, mode:"a", _s6saved:false }; // mode a=placeholder(★)
 
   /* v0.2.2 안내 배너: 화면마다 "지금 어디·무엇을" 일상어로 */
   var GUIDE = {
@@ -310,21 +310,26 @@ var app = (function(){
       ONBO.step(5,"exit"); /*STEP:5*/
     },
     openEditor: function(i){
-      state.selected=i; var s=state.scenes[i];
+      state.selected=i; state._s6saved=false; var s=state.scenes[i];
       ONBO.step(6,"enter"); /*STEP:6*/
       document.getElementById("editor").style.display="block";
       document.getElementById("ed-title").textContent="#"+s.idx+" · "+s.role;
       document.getElementById("ed-text").value=s.text; renderScenes();
     },
-    saveScene: function(){
+    /* v0.2.3: 편집창이 열려 있으면 현재 문구를 항상 저장(조용한 유실 방지)+S6 저장기록 1회 보장 */
+    commitOpenEditor: function(){
       if(state.selected<0) return;
       state.scenes[state.selected].text=document.getElementById("ed-text").value;
-      ONBO.step(6,"exit"); /*STEP:6*/
+      if(!state._s6saved){ ONBO.step(6,"exit"); /*STEP:6*/ state._s6saved=true; }
+    },
+    saveScene: function(){
+      if(state.selected<0) return;
+      app.commitOpenEditor();
       var eb=document.getElementById("btn-export"); if(eb) eb.classList.add("ready");
-      var sh=document.getElementById("scenehint"); if(sh) sh.innerHTML="✅ 수정했어요! 더 고쳐도 되고, <b>지금 아래 초록색 [내보내기]</b>를 누르면 끝납니다.";
+      var sh=document.getElementById("scenehint"); if(sh) sh.innerHTML="✅ 수정 저장됨! 더 고쳐도 되고, <b>지금 아래 초록색 [내보내기]</b>를 누르면 끝납니다.";
       renderScenes();
     },
-    closeEditor: function(){ document.getElementById("editor").style.display="none"; state.selected=-1; renderScenes(); },
+    closeEditor: function(){ app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; renderScenes(); },
     toggleMode: function(){
       state.mode = state.mode==="a" ? "b" : "a";
       ONBO.pick("DIR-3", state.mode);           // 테스터의 A/B 선택이 회신 로그에 자동 기록
@@ -333,6 +338,8 @@ var app = (function(){
       else { renderScenes(); }
     },
     exportJSON: function(){
+      app.commitOpenEditor(); /* v0.2.3: 열린 편집 자동 저장(유실 방지)+S6 기록 */
+      document.getElementById("editor").style.display="none"; state.selected=-1;
       ONBO.step(7,"enter"); /*STEP:7*/
       var payload={ app:"onbo-studio", version:CONTRACT.version+"-prealpha", vertical:state.vertical, contentMode:state.mode,
         source:{type:"app", raw:{name:state.name,desc:state.desc,feats:state.feats}, meta:{}, brandProfile:null},
