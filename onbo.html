@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.3.0 (인트로 UX)</title>
+<title>온보 스튜디오 — pre-alpha v0.4.0 (인트로 UX)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.3.0","steps":[
+{"version":"0.4.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -68,9 +68,15 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.3.0 · 인트로 UX · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.4.0 · 인트로 UX · 내부용</span>
 </header>
 <main>
+
+<div id="resumebar" style="display:none;align-items:center;gap:12px;background:#182238;border:1px solid #2f4266;border-radius:10px;padding:11px 14px;margin-bottom:16px;flex-wrap:wrap;">
+  <span style="font-size:13.5px;color:#cdd9f2;flex:1;min-width:180px;">💾 저장된 작업 <b id="resume-name"></b>이 있어요. 이어서 하시겠어요?</span>
+  <button class="btn" data-testid="btn-resume" onclick="app.resumeDraft()" style="margin:0;padding:8px 16px;font-size:13px;">이어서 하기</button>
+  <button class="ghost2" data-testid="btn-fresh" onclick="app.startFresh()">새로 시작</button>
+</div>
 
 <!-- S2: 인트로 카드 1 — 목적 -->
 <section class="screen" id="scr-intro-goal">
@@ -82,7 +88,7 @@
     <div class="opt" tabindex="0" role="button" data-testid="goal-marketing" data-goal="marketing"><div class="ic">📣</div><b>SNS 후킹 소개</b><small>올리면 눈길 끄는 소개</small></div>
     <div class="opt" tabindex="0" role="button" data-testid="goal-education" data-goal="education"><div class="ic">🎓</div><b>쉽게 설명</b><small>복잡한 걸 간단히</small></div>
   </div>
-  <div class="rowbtn"><span></span><button class="ghost2" data-testid="skip-goal" onclick="app.skipGoal()">건너뛰기 →</button></div>
+  <div class="rowbtn"><button class="ghost2" data-testid="btn-demo" onclick="app.demo()">⚡ 예시로 바로 보기</button><button class="ghost2" data-testid="skip-goal" onclick="app.skipGoal()">건너뛰기 →</button></div>
 </section>
 
 <!-- S3(전반): 인트로 카드 2 — 주인공 -->
@@ -138,12 +144,12 @@
 <section class="screen" id="scr-done">
   <div class="success"><div class="big">🎉</div><h2>내보내기 완료</h2></div>
   <div class="done-box"><p style="font-size:14px;line-height:1.7">인트로 답(목적·주인공·청중·톤)이 <code>brandProfile</code>까지 채워 10장면 스토리로 완성됐습니다.<br>회신: 하단 <code>RV 코드</code> 클릭(복사) 한 줄이면 충분합니다.</p></div>
-  <div class="row"><button class="btn" data-testid="btn-restart" onclick="location.reload()">한 번 더(리셋)</button></div>
+  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
 </section>
 
 </main>
 <footer>
-  <span>v0.3.0 · 인트로 UX</span>
+  <span>v0.4.0 · 인트로 UX</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -183,6 +189,13 @@ var _goal="activation";function app_goal(){return _goal;}
 
 var app=(function(){
   var state={goal:null,name:"",desc:"",feats:[],audience:null,tone:"plain",scenes:[],selected:-1,_s6saved:false};
+  /* v0.4.0 N3: 로컬 초안 저장(기기 내, 서버 전송 0) */
+  var LSKEY="onbo_draft_v1";
+  function saveDraft(){try{if(!state.scenes.length)return;localStorage.setItem(LSKEY,JSON.stringify({goal:state.goal,name:state.name,desc:state.desc,feats:state.feats,audience:state.audience,tone:state.tone,scenes:state.scenes,ts:Date.now()}));}catch(e){}}
+  function loadDraft(){try{var r=localStorage.getItem(LSKEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+  function clearDraft(){try{localStorage.removeItem(LSKEY);}catch(e){}}
+  /* v0.4.0 N4: 캔버스 텍스트 줄바꿈 */
+  function wrapText(x,text,left,top,maxW,lh){var words=String(text).split(/(\s+)/),line="",y=top;for(var i=0;i<words.length;i++){var test=line+words[i];if(x.measureText(test).width>maxW&&line){x.fillText(line,left,y);line=words[i].replace(/^\s+/,"");y+=lh;}else line=test;}x.fillText(line,left,y);return y;}
   function show(id){var s=document.querySelectorAll(".screen");for(var i=0;i<s.length;i++)s[i].classList.remove("active");document.getElementById(id).classList.add("active");window.scrollTo(0,0);}
   function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   function nm(){return state.name||ph(state.goal||"activation")[0];}
@@ -198,7 +211,7 @@ var app=(function(){
     state.scenes=stubEngine();
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     document.getElementById("scenes-title").textContent="「"+nm()+"」 10장면 스토리";
-    renderScenes(); show("scr-scenes");
+    renderScenes(); show("scr-scenes"); saveDraft();
     ONBO.step(5,"exit"); /*STEP:5*/
   }
   return {
@@ -207,7 +220,28 @@ var app=(function(){
     boot:function(){
       ONBO.step(1,"enter"); /*STEP:1*/ show("scr-intro-goal"); ONBO.step(1,"exit"); /*STEP:1*/
       ONBO.step(2,"enter"); /*STEP:2*/  // 인트로 시작 = 무엇을 만들까(목적)
+      var d=loadDraft(); if(d&&d.scenes&&d.scenes.length===10){var b=document.getElementById("resumebar");if(b){b.style.display="flex";document.getElementById("resume-name").textContent="「"+(d.name||ph(d.goal||"activation")[0])+"」";}}
     },
+    /* v0.4.0 N3: 저장된 초안 이어서 */
+    resumeDraft:function(){var d=loadDraft();if(!d)return;state.goal=d.goal;state.name=d.name||"";state.desc=d.desc||"";state.feats=d.feats||[];state.audience=d.audience;state.tone=d.tone||"plain";state.scenes=d.scenes;state.selected=-1;state._s6saved=false;
+      var b=document.getElementById("resumebar");if(b)b.style.display="none";
+      /* 복원 시 앞 단계 계측 채움(RV 완전성 유지) */
+      ONBO.step(2,"exit");ONBO.step(3,"enter");ONBO.step(3,"exit");ONBO.step(4,"enter");ONBO.step(4,"exit");ONBO.step(5,"enter");
+      document.getElementById("scenes-title").textContent="「"+nm()+"」 10장면 스토리";renderScenes();show("scr-scenes");ONBO.step(5,"exit");},
+    startFresh:function(){clearDraft();var b=document.getElementById("resumebar");if(b)b.style.display="none";},
+    /* v0.4.0 T-lens: 예시로 바로 보기(1클릭 데모) */
+    demo:function(){state.goal="activation";state.name=ph("activation")[0];state.desc=ph("activation")[1];state.feats=[];state.audience="general_public";state.tone="plain";
+      ONBO.card("C1_goal","(demo)");ONBO.step(2,"exit");ONBO.step(3,"enter");ONBO.card("C2_subject","(demo)");ONBO.card("C3_audience","(demo)");ONBO.card("C4_tone","(demo)");ONBO.pick("DIR-3","a");
+      generateAndShow();},
+    /* v0.4.0 N4: 훅 장면 1장 PNG 내보내기 */
+    exportPNG:function(){var s=state.scenes[0]||{idx:1,role:"훅",text:nm()};
+      var c=document.createElement("canvas");c.width=1080;c.height=1080;var x=c.getContext("2d");
+      var g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,"#12141c");g.addColorStop(1,"#232a40");x.fillStyle=g;x.fillRect(0,0,1080,1080);
+      x.fillStyle="#5b8cff";x.fillRect(90,150,120,12);
+      x.fillStyle="#8fa6d8";x.font="600 36px sans-serif";x.fillText("#"+s.idx+" · "+s.role,90,240);
+      x.fillStyle="#ffffff";x.font="700 66px sans-serif";x.textBaseline="alphabetic";wrapText(x,s.text,90,360,900,86);
+      x.fillStyle="#6b7fb0";x.font="500 30px sans-serif";x.fillText("온보 스튜디오 · "+nm()+" · 30초 온보딩",90,1010);
+      var a=document.createElement("a");a.href=c.toDataURL("image/png");a.download=(nm()||"onbo")+"_scene1.png";a.click();},
     pickGoal:function(g,el){state.goal=g;ONBO.card("C1_goal",g);if(el)mark("scr-intro-goal",el);
       document.getElementById("in-name").placeholder="예: "+ph(g)[0];document.getElementById("in-desc").placeholder="예: "+ph(g)[1];
       ONBO.step(2,"exit"); /*STEP:2*/ ONBO.step(3,"enter"); /*STEP:3*/
@@ -225,11 +259,11 @@ var app=(function(){
     skipTone:function(){state.tone="plain";ONBO.card("C4_tone","(skip)");ONBO.pick("DIR-3","a");generateAndShow();},
     back:function(id){show(id);},
     openEditor:function(i){state.selected=i;state._s6saved=false;var s=state.scenes[i];ONBO.step(6,"enter"); /*STEP:6*/ document.getElementById("editor").style.display="block";document.getElementById("ed-title").textContent="#"+s.idx+" · "+s.role;document.getElementById("ed-text").value=s.text;renderScenes();},
-    commitOpenEditor:function(){if(state.selected<0)return;state.scenes[state.selected].text=document.getElementById("ed-text").value;if(!state._s6saved){ONBO.step(6,"exit"); /*STEP:6*/ state._s6saved=true;}},
+    commitOpenEditor:function(){if(state.selected<0)return;state.scenes[state.selected].text=document.getElementById("ed-text").value;saveDraft();if(!state._s6saved){ONBO.step(6,"exit"); /*STEP:6*/ state._s6saved=true;}},
     saveScene:function(){if(state.selected<0)return;app.commitOpenEditor();renderScenes();},
     closeEditor:function(){app.commitOpenEditor();document.getElementById("editor").style.display="none";state.selected=-1;renderScenes();},
     exportJSON:function(){
-      app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.3.0: 편집 자동저장(유실 방지) */
+      app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.4.0: 편집 자동저장(유실 방지) */
       ONBO.step(7,"enter"); /*STEP:7*/
       var payload={app:"onbo-studio",version:CONTRACT.version+"-prealpha",vertical:"app",contentMode:state.tone==="emotive"?"b":"a",
         source:{type:"app",raw:{name:nm(),desc:ds(),feats:state.feats},meta:{goal:state.goal,audience:state.audience},
