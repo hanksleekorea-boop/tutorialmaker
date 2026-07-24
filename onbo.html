@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.5.1 (인트로 UX)</title>
+<title>온보 스튜디오 — pre-alpha v0.6.0 (인트로 UX)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.5.1","steps":[
+{"version":"0.6.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -63,7 +63,16 @@
   footer button{background:none;border:1px solid var(--line);color:var(--dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;}
   .steps{display:flex;gap:5px;} .stepdot{width:22px;height:5px;border-radius:3px;background:var(--line);} .stepdot.on{background:var(--accbright);} .stepdot.done{background:var(--acc2);}
   #rvcode{cursor:pointer;font-family:monospace;font-size:11px;color:var(--acc2);background:#12141c;border:1px solid var(--line);border-radius:5px;padding:3px 8px;}
-  /* v0.5.1 소스드롭 */
+  /* v0.6.0 다른 형식(요약) */
+  .fmtbar{margin-top:22px;padding-top:16px;border-top:1px dashed var(--line);}
+  .fmtlabel{font-size:13.5px;color:var(--dim);margin-bottom:9px;}
+  .fmttiles{display:flex;gap:8px;flex-wrap:wrap;}
+  .fmttile{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;}
+  .fmttile.on{background:var(--panel2);border-color:var(--acc2);color:#e8ecf5;font-weight:700;cursor:default;}
+  .fmtout{margin-top:12px;background:#12141c;border:1px solid var(--line);border-radius:10px;padding:14px;font-size:13.5px;line-height:1.65;color:#e8ecf5;}
+  .fmtout h4{margin:0 0 4px;font-size:12px;color:var(--accbright);} .fmtout .blk{margin-bottom:12px;}
+  .fmtout .cp{background:none;border:1px solid var(--line);color:var(--dim);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;margin-left:8px;}
+  /* v0.6.0 소스드롭 */
   .sdtoggle{display:flex;gap:8px;margin:4px 0 14px;}
   .sdtab{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:9px;font-size:13px;cursor:pointer;}
   .sdtab.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700;}
@@ -76,7 +85,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.5.1 · 인트로 UX · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.6.0 · 인트로 UX · 내부용</span>
 </header>
 <main>
 
@@ -156,6 +165,14 @@
     <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
   <div class="row"><button class="btn green" data-testid="btn-export" onclick="app.exportJSON()">JSON 내보내기 ⬇</button><button class="btn ghost" data-testid="btn-reset" onclick="location.reload()">처음부터(리셋)</button></div>
+  <div class="fmtbar">
+    <div class="fmtlabel">✨ 같은 내용으로 <b>다른 형식</b>도 바로 만들 수 있어요:</div>
+    <div class="fmttiles">
+      <span class="fmttile on">📱 온보딩 10장면</span>
+      <button class="fmttile" data-testid="fmt-summary" onclick="app.renderFormat('summary')">📝 요약</button>
+    </div>
+    <div id="fmt-out" class="fmtout" style="display:none"></div>
+  </div>
 </section>
 
 <!-- S8: 완료 -->
@@ -167,7 +184,7 @@
 
 </main>
 <footer>
-  <span>v0.5.1 · 인트로 UX</span>
+  <span>v0.6.0 · 인트로 UX</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -207,12 +224,12 @@ var _goal="activation";function app_goal(){return _goal;}
 
 var app=(function(){
   var state={goal:null,name:"",desc:"",feats:[],audience:null,tone:"plain",scenes:[],selected:-1,_s6saved:false};
-  /* v0.5.1 N3: 로컬 초안 저장(기기 내, 서버 전송 0) */
+  /* v0.6.0 N3: 로컬 초안 저장(기기 내, 서버 전송 0) */
   var LSKEY="onbo_draft_v1";
   function saveDraft(){try{if(!state.scenes.length)return;localStorage.setItem(LSKEY,JSON.stringify({goal:state.goal,name:state.name,desc:state.desc,feats:state.feats,audience:state.audience,tone:state.tone,scenes:state.scenes,ts:Date.now()}));}catch(e){}}
   function loadDraft(){try{var r=localStorage.getItem(LSKEY);return r?JSON.parse(r):null;}catch(e){return null;}}
   function clearDraft(){try{localStorage.removeItem(LSKEY);}catch(e){}}
-  /* v0.5.1 N4: 캔버스 텍스트 줄바꿈 */
+  /* v0.6.0 N4: 캔버스 텍스트 줄바꿈 */
   function wrapText(x,text,left,top,maxW,lh){var words=String(text).split(/(\s+)/),line="",y=top;for(var i=0;i<words.length;i++){var test=line+words[i];if(x.measureText(test).width>maxW&&line){x.fillText(line,left,y);line=words[i].replace(/^\s+/,"");y+=lh;}else line=test;}x.fillText(line,left,y);return y;}
   function show(id){var s=document.querySelectorAll(".screen");for(var i=0;i<s.length;i++)s[i].classList.remove("active");document.getElementById(id).classList.add("active");window.scrollTo(0,0);}
   function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -222,7 +239,7 @@ var app=(function(){
   function hookA(){return nm()+" — "+ds();}
   function hookB(){var hooks={activation:"하루의 시작을 바꾸는 단 하나",pitch:"숫자가 말해주는 성장",marketing:"모두가 궁금해하는 그것",education:"어려운 걸 쉽게 만드는 마법"};return (hooks[state.goal]||"단 한 문장으로 시작하는 이야기")+" — "+nm();}
   function stubEngine(){_goal=state.goal||"activation";var fr=(state.tone==="emotive"?framesB:framesA)(nm(),ds(),feats());var out=[];for(var i=0;i<10;i++)out.push({idx:i+1,role:fr[i][0],text:fr[i][1],dur:3});return out;}
-  /* ===== v0.5.1 진짜 AI 엔진 (중계 서버 경유) ===== */
+  /* ===== v0.6.0 진짜 AI 엔진 (중계 서버 경유) ===== */
   var PROXY_URL="https://onbo-llm.hanksleekorea.workers.dev";
   var ROLE_SLOTS=["훅","문제","해결","기능①","기능②","기능③","신뢰","권한","첫 행동","시작(CTA)"];
   function buildPrompt(goal,name,desc,feats,audience,tone){
@@ -269,7 +286,7 @@ var app=(function(){
     }catch(e){clearTimeout(to);return null;}
   }
   function drawStrip(){var s=document.getElementById("strip");if(!s)return;_goal=state.goal||"activation";var sc=stubEngine();var pick=[0,3,9],h="";for(var j=0;j<3;j++){var x=sc[pick[j]];h+='<div class="pcard flash"><div class="pn">#'+(pick[j]+1)+'</div><div class="pr">'+x.role+'</div><p>'+esc(x.text)+'</p></div>';}s.innerHTML=h;}
-  /* ===== v0.5.1 소스드롭: 붙여넣은 문서에서 AI가 추출(StoryIR-lite) ===== */
+  /* ===== v0.6.0 소스드롭: 붙여넣은 문서에서 AI가 추출(StoryIR-lite) ===== */
   function buildExtractPrompt(src){
     return [
       "아래 문서에서만 근거를 찾아 앱/제품 정보를 추출합니다. 문서에 없는 값은 빈 문자열(\"\")로 두세요. 절대 지어내지 마세요.",
@@ -308,6 +325,26 @@ var app=(function(){
     if(/실무|현업|바쁜|busy|worker|developer|엔지니어/.test(t))return "busy_doer";
     if(/결정|경영|투자|상사|ceo|대표|decision|manager/.test(t))return "decision_maker";
     return "general_public";}
+  /* ===== v0.6.0 요약 렌더러 (같은 소재 → 다른 형식, IR 재사용) ===== */
+  function buildSummaryPrompt(name,desc,feats,goal,audience){
+    return [
+      "아래 제품을 세 가지 길이의 요약으로 만듭니다. 과장·미확인 수치 금지, 사실 기반.",
+      "제품: "+name+" — "+desc,
+      "핵심 기능: "+(feats&&feats.length?feats.join(", "):"(미지정)")+" / 목적: "+(goal||"")+" / 대상: "+(audience||""),
+      "출력은 JSON만: {\"oneLiner\":\"한 줄(40자내)\",\"threeLines\":[\"핵심 3가지 불릿\",\"...\",\"...\"],\"paragraph\":\"한 문단(3~4문장)\"} — 코드블록·설명 금지.",
+    ].join("\n");
+  }
+  function parseSummary(raw){
+    try{var s=String(raw).replace(/```json/gi,"").replace(/```/g,"");var m=s.match(/\{[\s\S]*\}/);if(!m)return null;var o=JSON.parse(m[0]);
+      return {oneLiner:String(o.oneLiner||"").trim(),threeLines:Array.isArray(o.threeLines)?o.threeLines.map(function(x){return String(x).trim();}).filter(Boolean).slice(0,3):[],paragraph:String(o.paragraph||"").trim()};
+    }catch(e){return null;}
+  }
+  function stubSummary(){ // 폴백: 장면 문구에서 요약 구성
+    var sc=state.scenes||[];
+    return {oneLiner:nm()+" — "+ds(),
+      threeLines:[ (sc[2]?sc[2].text:"핵심 해결"), (sc[3]?sc[3].text:feats()[0]), (sc[9]?sc[9].text:"지금 시작") ],
+      paragraph:nm()+"은(는) "+ds()+" "+(sc[1]?sc[1].text+" ":"")+(sc[2]?sc[2].text:"")};
+  }
   function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");}
   async function generateAndShow(){
     ONBO.step(3,"exit"); ONBO.step(4,"enter"); /*STEP:4*/
@@ -331,18 +368,18 @@ var app=(function(){
       ONBO.step(2,"enter"); /*STEP:2*/  // 인트로 시작 = 무엇을 만들까(목적)
       var d=loadDraft(); if(d&&d.scenes&&d.scenes.length===10){var b=document.getElementById("resumebar");if(b){b.style.display="flex";document.getElementById("resume-name").textContent="「"+(d.name||ph(d.goal||"activation")[0])+"」";}}
     },
-    /* v0.5.1 N3: 저장된 초안 이어서 */
+    /* v0.6.0 N3: 저장된 초안 이어서 */
     resumeDraft:function(){var d=loadDraft();if(!d)return;state.goal=d.goal;state.name=d.name||"";state.desc=d.desc||"";state.feats=d.feats||[];state.audience=d.audience;state.tone=d.tone||"plain";state.scenes=d.scenes;state.selected=-1;state._s6saved=false;
       var b=document.getElementById("resumebar");if(b)b.style.display="none";
       /* 복원 시 앞 단계 계측 채움(RV 완전성 유지) */
       ONBO.step(2,"exit");ONBO.step(3,"enter");ONBO.step(3,"exit");ONBO.step(4,"enter");ONBO.step(4,"exit");ONBO.step(5,"enter");
       document.getElementById("scenes-title").textContent="「"+nm()+"」 10장면 스토리";renderScenes();show("scr-scenes");ONBO.step(5,"exit");},
     startFresh:function(){clearDraft();var b=document.getElementById("resumebar");if(b)b.style.display="none";},
-    /* v0.5.1 T-lens: 예시로 바로 보기(1클릭 데모) */
+    /* v0.6.0 T-lens: 예시로 바로 보기(1클릭 데모) */
     demo:function(){state.goal="activation";state.name=ph("activation")[0];state.desc=ph("activation")[1];state.feats=[];state.audience="general_public";state.tone="plain";
       ONBO.card("C1_goal","(demo)");ONBO.step(2,"exit");ONBO.step(3,"enter");ONBO.card("C2_subject","(demo)");ONBO.card("C3_audience","(demo)");ONBO.card("C4_tone","(demo)");ONBO.pick("DIR-3","a");
       generateAndShow();},
-    /* v0.5.1 N4: 훅 장면 1장 PNG 내보내기 */
+    /* v0.6.0 N4: 훅 장면 1장 PNG 내보내기 */
     exportPNG:function(){var s=state.scenes[0]||{idx:1,role:"훅",text:nm()};
       var c=document.createElement("canvas");c.width=1080;c.height=1080;var x=c.getContext("2d");
       var g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,"#12141c");g.addColorStop(1,"#232a40");x.fillStyle=g;x.fillRect(0,0,1080,1080);
@@ -357,7 +394,30 @@ var app=(function(){
       setTimeout(function(){show("scr-intro-subject");drawStrip();},280);},
     skipGoal:function(){state.goal="activation";ONBO.card("C1_goal","(skip)");ONBO.step(2,"exit");ONBO.step(3,"enter");show("scr-intro-subject");drawStrip();},
     onInput:function(){state.name=document.getElementById("in-name").value;state.desc=document.getElementById("in-desc").value;drawStrip();},
-    /* v0.5.1 소스드롭 */
+    /* v0.6.0 요약 렌더러 — 같은 소재로 다른 형식 즉시 생성 */
+    renderFormat:async function(fmt){
+      var out=document.getElementById("fmt-out"); out.style.display="block";
+      if(fmt!=="summary"){out.textContent="준비 중 형식입니다.";return;}
+      out.innerHTML='🤖 같은 내용으로 <b>요약</b>을 만드는 중…';
+      ONBO.card("format_render","summary");
+      var r=await callProxy(buildSummaryPrompt(nm(),ds(),feats(),state.goal,state.audience));
+      var sm=r?parseSummary(r.text):null;
+      var real=!!sm;
+      if(!sm) sm=stubSummary();
+      window.__lastSummary=sm;
+      var three=(sm.threeLines||[]).map(function(x){return "• "+esc(x);}).join("<br>");
+      out.innerHTML=
+        '<div class="blk"><h4>한 줄 요약'+(real?"":" (기본)")+'</h4>'+esc(sm.oneLiner)+'</div>'+
+        '<div class="blk"><h4>핵심 3가지</h4>'+three+'</div>'+
+        '<div class="blk"><h4>한 문단</h4>'+esc(sm.paragraph)+'</div>'+
+        '<button class="cp" data-testid="btn-copy-summary" onclick="app.copySummary(this)">📋 요약 복사</button>'+
+        '<button class="cp" onclick="app.downloadSummary()">⬇ 텍스트 저장</button>'+
+        (real?'':'<div style="margin-top:8px;font-size:11px;color:var(--warn)">※ AI 연결이 안 돼 기본 요약을 보여줬어요</div>');
+    },
+    summaryText:function(){var s=window.__lastSummary||stubSummary();return "["+nm()+" 요약]\n\n한 줄: "+s.oneLiner+"\n\n핵심 3가지:\n"+(s.threeLines||[]).map(function(x){return "• "+x;}).join("\n")+"\n\n"+s.paragraph;},
+    copySummary:function(btn){var t=app.summaryText();function ok(){if(btn){btn.textContent="복사됨✓";setTimeout(function(){btn.textContent="📋 요약 복사";},1500);}}if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,ok);else ok();},
+    downloadSummary:function(){var blob=new Blob([app.summaryText()],{type:"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(nm()||"onbo")+"_요약.txt";a.click();},
+    /* v0.6.0 소스드롭 */
     sdMode:function(m){
       var pasteOn=(m==="paste");
       document.getElementById("sd-tab-manual").classList.toggle("on",!pasteOn);
@@ -405,7 +465,7 @@ var app=(function(){
     saveScene:function(){if(state.selected<0)return;app.commitOpenEditor();renderScenes();},
     closeEditor:function(){app.commitOpenEditor();document.getElementById("editor").style.display="none";state.selected=-1;renderScenes();},
     exportJSON:function(){
-      app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.5.1: 편집 자동저장(유실 방지) */
+      app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.6.0: 편집 자동저장(유실 방지) */
       ONBO.step(7,"enter"); /*STEP:7*/
       var payload={app:"onbo-studio",version:CONTRACT.version+"-prealpha",vertical:"app",contentMode:state.tone==="emotive"?"b":"a",
         source:{type:"app",inputMode:(state.ir?"paste":"manual"),raw:{name:nm(),desc:ds(),feats:state.feats},meta:{goal:state.goal,audience:state.audience,extraction:(state.ir?state.ir.source:null)},
