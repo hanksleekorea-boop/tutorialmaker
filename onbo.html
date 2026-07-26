@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.11.0 (되돌리기·공유링크·인쇄)</title>
+<title>온보 스튜디오 — pre-alpha v0.12.0 (저장안전망·사실성가드·다중소재)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.11.0","steps":[
+{"version":"0.12.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -121,6 +121,13 @@
   #pv .pvclose{position:absolute;top:14px;right:14px;min-height:44px;min-width:44px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.25);color:#fff;font-size:14px;cursor:pointer;}
   .fontpick{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:#12141c;color:var(--dim);font-size:12.5px;cursor:pointer;}
   .fontpick.on{border-color:var(--acc2);color:var(--txt);}
+  .savebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin:10px 0 0;padding:8px 11px;border-radius:9px;background:#12141c;border:1px solid var(--line);}
+  .savebar.bad{border-color:var(--warn);color:#ffd9a8;background:#241c11;}
+  .savebar button{min-height:38px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12px;cursor:pointer;}
+  .warnchip{display:inline-flex;align-items:center;gap:4px;margin-top:7px;font-size:10.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--warn);color:var(--warn);}
+  .scene.risky{border-color:var(--warn);}
+  .offbar{display:none;align-items:center;gap:10px;background:#241c11;border:1px solid var(--warn);color:#ffd9a8;border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:13px;}
+  .offbar.on{display:flex;}
   .edctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}
   .edctl label{margin:0;font-size:12px;color:var(--dim);}
   .edctl select,.edctl input{background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:8px;min-height:44px;padding:0 10px;font-size:13px;}
@@ -142,7 +149,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.11.0 · 되돌리기 · 공유링크 · 인쇄 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.12.0 · 저장 안전망 · 사실성 가드 · 내부용</span>
 </header>
 <main>
 
@@ -186,9 +193,9 @@
   <div id="sd-file-block" style="display:none">
     <div class="dropzone" id="dropzone" data-testid="dropzone" tabindex="0" role="button" onclick="document.getElementById('sd-file').click()">
       <b>📄 파일을 여기에 놓거나 눌러서 선택</b>
-      <small>PDF · Word(.docx) · 파워포인트(.pptx) · 엑셀(.xlsx/.csv) · 텍스트(.txt/.md) — 파일은 서버로 전송되지 않고 기기 안에서만 읽힙니다</small>
+      <small>PDF · Word(.docx) · 파워포인트(.pptx) · 엑셀(.xlsx/.csv) · 텍스트(.txt/.md) — <b>여러 개를 한 번에</b> 골라도 됩니다(최대 5개, 합쳐서 읽습니다). 파일은 서버로 전송되지 않고 기기 안에서만 읽힙니다</small>
     </div>
-    <input type="file" id="sd-file" data-testid="sd-file" accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md" style="display:none" onchange="app.onFile(this.files&&this.files[0])">
+    <input type="file" id="sd-file" data-testid="sd-file" multiple accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md" style="display:none" onchange="app.onFiles(this.files)">
     <div id="sd-file-status" class="sdstatus"></div>
   </div>
   <div id="sd-yt-block" style="display:none">
@@ -246,6 +253,7 @@
 <section class="screen" id="scr-scenes">
   <div class="q" id="scenes-title">10장면 스토리</div>
   <div class="coach">💡 <b>장면을 눌러</b> 문구를 바로 고칠 수 있어요. 마음에 들면 <b>[내보내기]</b> 하면 끝! <span class="stub" id="engine-ind">엔진: 준비</span> <span class="stub" id="mode-ind"></span></div>
+  <div class="offbar" id="offbar">📴 <span>인터넷이 끊겼어요. <b>지금까지 만든 내용은 그대로 있고 계속 고칠 수 있습니다.</b> 새로 AI를 부르는 기능(다시 쓰기·다른 형식)만 잠시 안 됩니다.</span></div>
   <div class="nudge" id="nudge">✅ <b>10장면이 나왔어요.</b> 이대로 괜찮으면 바로 <b>[JSON 내보내기]</b>로 끝내도 됩니다. 고치고 싶은 문구가 있으면 장면의 <b>[✏️ 고치기]</b>를 누르세요 — <b>선택 사항</b>입니다.</div>
   <div id="printhead"><h2 id="print-title" style="font-size:18pt;margin-bottom:4px"></h2><p id="print-sub" style="font-size:11pt;color:#444;margin-bottom:12px"></p></div>
   <div class="scenegrid" id="scenegrid"></div>
@@ -259,12 +267,17 @@
       <label for="ed-dur">길이</label>
       <select id="ed-dur" data-testid="ed-dur"><option value="2">2초</option><option value="3" selected>3초</option><option value="4">4초</option><option value="5">5초</option><option value="7">7초</option></select>
     </div>
-    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
+    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-dup" onclick="app.dupScene()">⧉ 이 장면 복제</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
+  <div class="savebar" id="savebar" data-testid="savebar"><span id="savemsg">저장 준비 중…</span></div>
   <div class="scenetools">
     <button class="play" data-testid="btn-play" onclick="app.playPreview()">▶ 30초로 재생해보기</button>
     <button data-testid="btn-addend" onclick="app.addScene(true)">➕ 맨 끝에 장면 추가</button>
     <button data-testid="btn-undo" onclick="app.undo()">↩ 되돌리기</button>
+    <button data-testid="btn-redo" onclick="app.redo()">↪ 다시하기</button>
+    <button data-testid="btn-fit30" onclick="app.fitTotal(30)">⏱ 총 30초로 맞추기</button>
+    <button data-testid="btn-fit60" onclick="app.fitTotal(60)">⏱ 60초</button>
+    <button data-testid="btn-hint" onclick="app.makeHints()">🎨 장면별 그림 힌트</button>
     <button data-testid="btn-share" onclick="app.shareLink()">🔗 공유 링크 복사</button>
     <button data-testid="btn-print" onclick="app.printView()">🖨 인쇄 / PDF로 저장</button>
     <span id="scenecount" style="align-self:center;font-size:12.5px;color:var(--dim)"></span>
@@ -301,7 +314,7 @@
 <section class="screen" id="scr-done">
   <div class="success"><div class="big">🎉</div><h2>내보내기 완료</h2></div>
   <div class="done-box"><p style="font-size:14px;line-height:1.7">인트로 답(목적·주인공·청중·톤)이 <code>brandProfile</code>까지 채워 10장면 스토리로 완성됐습니다.<br>회신: 하단 <code>RV 코드</code> 클릭(복사) 한 줄이면 충분합니다.</p></div>
-  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-md" onclick="app.exportMD()">📝 전체 문서(.md)</button><button class="btn green" data-testid="btn-report" onclick="app.exportReport()">📑 보고용 장표(.pptx)</button><button class="btn" data-testid="btn-pngall" onclick="app.exportPNGAll()">🖼 장면 전체 이미지(.zip)</button><button class="btn" data-testid="btn-doc" onclick="app.exportDOC()">📄 워드 문서(.doc)</button><button class="btn ghost" data-testid="btn-share2" onclick="app.shareLink()">🔗 공유 링크 복사</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
+  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-md" onclick="app.exportMD()">📝 전체 문서(.md)</button><button class="btn green" data-testid="btn-report" onclick="app.exportReport()">📑 보고용 장표(.pptx)</button><button class="btn" data-testid="btn-pngall" onclick="app.exportPNGAll()">🖼 장면 전체 이미지(.zip)</button><button class="btn" data-testid="btn-doc" onclick="app.exportDOC()">📄 워드 문서(.doc)</button><button class="btn ghost" data-testid="btn-share2" onclick="app.shareLink()">🔗 공유 링크 복사</button><button class="btn ghost" data-testid="btn-backup" onclick="app.backupNow()">🛟 백업 파일 내려받기</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
   <div id="pptx-status" class="sdstatus" style="display:none"></div>
 </section>
 
@@ -314,7 +327,7 @@
   <div class="pvmeta" id="pv-meta"></div>
 </div>
 <footer>
-  <span>v0.11.0 · 되돌리기·공유링크·인쇄</span>
+  <span>v0.12.0 · 저장안전망·사실성가드·다중소재</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -393,8 +406,8 @@ var app=(function(){
       var all=histAll().filter(function(h){return h.name!==nm();});
       all.unshift({name:nm(),desc:ds(),goal:state.goal,audience:state.audience,tone:state.tone,
         feats:state.feats,scenes:state.scenes,brand:state.brand||"default",font:state.font||"sans",ts:Date.now()});
-      localStorage.setItem(HKEY,JSON.stringify(all.slice(0,5)));
-    }catch(e){}
+      localStorage.setItem(HKEY,JSON.stringify(all.slice(0,10)));
+    }catch(e){ /* 기록 저장 실패는 핵심 여정을 막지 않는다 */ }
   }
   function renderHist(){
     var box=document.getElementById("histbox"), list=document.getElementById("histlist");
@@ -403,33 +416,112 @@ var app=(function(){
     box.style.display="block";
     list.innerHTML=all.map(function(h,i){
       var d=new Date(h.ts), dt=(d.getMonth()+1)+"/"+d.getDate();
-      return '<div class="histrow"><span>'+esc(h.name)+' · '+h.scenes.length+'장면 · '+dt+'</span><button data-testid="hist-'+i+'" onclick="app.loadHist('+i+')">열기</button></div>';
+      return '<div class="histrow"><span>'+esc(h.name)+' · '+h.scenes.length+'장면 · '+dt+'</span><span style="display:flex;gap:6px"><button data-testid="hist-'+i+'" onclick="app.loadHist('+i+')">열기</button><button data-testid="histren-'+i+'" onclick="app.histRename('+i+')">이름</button><button data-testid="histdel-'+i+'" onclick="app.histDelete('+i+')">삭제</button></span></div>';
     }).join("");
   }
   /* ===== v0.11.0 되돌리기(작업 취소) — 최근 10단계 ===== */
-  var UNDO=[];
+  var UNDO=[],REDO=[];
+  function snapState(label){
+    return {label:label,scenes:JSON.parse(JSON.stringify(state.scenes||[])),name:state.name,tone:state.tone,
+      edited:JSON.parse(JSON.stringify(state._edited||{}))};
+  }
+  function applySnap(u){
+    state.scenes=u.scenes; state.name=u.name; state.tone=u.tone; state._edited=u.edited;
+    state.selected=-1; var ed=document.getElementById("editor"); if(ed) ed.style.display="none";
+    var t=document.getElementById("scenes-title");
+    if(t) t.textContent="「"+nm()+"」 "+state.scenes.length+"장면 스토리";
+    renderScenes(); saveDraft();
+  }
   function snapshot(label){
     try{
       UNDO.push({label:label,scenes:JSON.parse(JSON.stringify(state.scenes||[])),name:state.name,tone:state.tone,edited:JSON.parse(JSON.stringify(state._edited||{}))});
       if(UNDO.length>10) UNDO.shift();
+      REDO.length=0;
     }catch(e){}
   }
   /* ===== v0.11.0 공유 링크 — 서버 없이 URL에 결과를 담는다 ===== */
   function b64enc(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
   function b64dec(str){ str=String(str).replace(/-/g,"+").replace(/_/g,"/"); while(str.length%4)str+="="; return decodeURIComponent(escape(atob(str))); }
+  /* v0.12.0 압축 포맷 v2: 줄바꿈 구분 + 앱 이름 토큰화(\u0001)로 JSON 오버헤드 제거 */
   function packShare(){
-    var o={v:CONTRACT.version,n:nm(),d:ds(),g:state.goal,a:state.audience,t:state.tone,b:state.brand||"default",ft:state.font||"sans",
-      f:state.feats||[],s:(state.scenes||[]).map(function(x){return [x.role,x.text,x.dur||3];})};
-    return b64enc(JSON.stringify(o));
+    var name=nm(), tok=function(t){return String(t==null?"":t).split(name).join("\u0001").replace(/[\t\n]/g," ");};
+    var head=["2",CONTRACT.version,name,ds(),state.goal||"",state.audience||"",state.tone||"plain",
+      state.brand||"default",state.font||"sans",(state.feats||[]).join("|")].map(function(x){return String(x).replace(/[\t\n]/g," ");}).join("\t");
+    var body=(state.scenes||[]).map(function(x){return [tok(x.role),tok(x.text),x.dur||3,tok(x.hint||"")].join("\t");}).join("\n");
+    return b64enc(head+"\n"+body);
   }
   function unpackShare(code){
     try{
-      var o=JSON.parse(b64dec(code));
-      if(!o||!Array.isArray(o.s)||!o.s.length) return null;
-      return o;
+      var raw=b64dec(code);
+      if(raw.charAt(0)==="{"){ var o=JSON.parse(raw); return (o&&Array.isArray(o.s)&&o.s.length)?o:null; }
+      var lines=raw.split("\n"), h=lines[0].split("\t");
+      if(h[0]!=="2") return null;
+      var name=h[2], un=function(t){return String(t||"").split("\u0001").join(name);};
+      var s=[];
+      for(var i=1;i<lines.length;i++){
+        if(!lines[i]) continue;
+        var c=lines[i].split("\t");
+        s.push([un(c[0]),un(c[1]),parseInt(c[2],10)||3,un(c[3]||"")]);
+      }
+      if(!s.length) return null;
+      return {v:h[1],n:name,d:h[3],g:h[4],a:h[5]||null,t:h[6],b:h[7],ft:h[8],f:(h[9]?h[9].split("|"):[]),s:s};
     }catch(e){return null;}
   }
-  function saveDraft(){try{if(!state.scenes.length)return;localStorage.setItem(LSKEY,JSON.stringify({goal:state.goal,name:state.name,desc:state.desc,feats:state.feats,audience:state.audience,tone:state.tone,scenes:state.scenes,brand:state.brand||"default",font:state.font||"sans",ts:Date.now()}));}catch(e){}}
+  /* ===== v0.12.0 저장 안전망 =====
+     원칙: 저장이 실패해도 ①입력이 사라지지 않고 ②앱이 멈추지 않고 ③사실대로 알리고 ④복구 수단을 준다. */
+  function draftPayload(){
+    return {goal:state.goal,name:state.name,desc:state.desc,feats:state.feats,audience:state.audience,
+      tone:state.tone,scenes:state.scenes,brand:state.brand||"default",font:state.font||"sans",ts:Date.now()};
+  }
+  function setSave(ok,why){
+    state._saveOk=ok; state._saveWhy=why||""; state._saveAt=ok?Date.now():state._saveAt;
+    var bar=document.getElementById("savebar"), msg=document.getElementById("savemsg");
+    if(!bar||!msg) return;
+    bar.classList.toggle("bad",!ok);
+    if(ok){
+      var d=new Date(state._saveAt), hh=("0"+d.getHours()).slice(-2), mm=("0"+d.getMinutes()).slice(-2);
+      msg.innerHTML='💾 이 기기에 저장됨 · '+hh+':'+mm+' <span style="color:var(--dim)">(서버로는 보내지 않습니다)</span>';
+      var b=document.getElementById("save-recover"); if(b) b.remove();
+    }else{
+      msg.innerHTML='⚠️ <b>이 기기에 저장하지 못했습니다</b> ('+esc(why||"원인 미상")+').<br>'+
+        '만든 내용은 <b>화면에 그대로 남아 있고 계속 고칠 수 있습니다.</b> 다만 새로고침하면 사라질 수 있으니 아래 버튼으로 파일을 받아두세요.';
+      if(!document.getElementById("save-recover")){
+        var btn=document.createElement("button");
+        btn.id="save-recover"; btn.setAttribute("data-testid","btn-recover");
+        btn.textContent="🛟 백업 파일 내려받기";
+        btn.onclick=function(){app.backupNow();};
+        bar.appendChild(btn);
+        var btn2=document.createElement("button");
+        btn2.setAttribute("data-testid","btn-retry-save");
+        btn2.textContent="🔄 다시 저장 시도";
+        btn2.onclick=function(){saveDraft(true);};
+        bar.appendChild(btn2);
+      }
+    }
+  }
+  function writeLS(key,val){ localStorage.setItem(key,val); }
+  function saveDraft(manual){
+    if(!state.scenes||!state.scenes.length) return;
+    var body;
+    try{ body=JSON.stringify(draftPayload()); }
+    catch(e){ setSave(false,"내용을 저장 형식으로 바꾸지 못함"); return; }
+    try{ writeLS(LSKEY,body); setSave(true); return; }
+    catch(e){
+      /* 1차 실패: 용량 초과일 수 있음 → 오래된 히스토리부터 비우고 재시도 */
+      var why=(e&&e.name==="QuotaExceededError")?"기기 저장 공간 부족":(e&&e.message)||"저장 거부됨";
+      try{
+        var all=histAll();
+        while(all.length>1){ all.pop(); writeLS(HKEY,JSON.stringify(all));
+          try{ writeLS(LSKEY,body); setSave(true);
+            var m=document.getElementById("savemsg");
+            if(m) m.innerHTML+=' <span style="color:var(--warn)">(공간이 부족해 오래된 기록 일부를 정리했습니다)</span>';
+            return; }catch(e2){}
+        }
+        try{ localStorage.removeItem(HKEY); writeLS(LSKEY,body); setSave(true); return; }catch(e3){}
+      }catch(e4){}
+      setSave(false,why);
+    }
+  }
   function loadDraft(){try{var r=localStorage.getItem(LSKEY);return r?JSON.parse(r):null;}catch(e){return null;}}
   function clearDraft(){try{localStorage.removeItem(LSKEY);}catch(e){}}
   /* v0.6.1 N4: 캔버스 텍스트 줄바꿈 */
@@ -641,6 +733,23 @@ var app=(function(){
     "마무리":"기억에 남길 한 줄. 이름을 다시 한 번."
   };
   function roleHint(r){ return ROLEHINT[r]||"이 장면이 맡은 역할에 맞게 한 문장으로."; }
+  /* ===== v0.12.0 사실성 가드 =====
+     확인되지 않은 채로 쓰면 문제가 되는 표현을 잡아 '경고'만 한다(자동 삭제하지 않는다). */
+  var RISKY=[
+    {re:/(업계|국내|세계)\s*(1위|최고|최초|유일)/,why:"순위·최초 주장은 근거가 없으면 분쟁이 됩니다"},
+    {re:/\d[\d,]*\s*(만|억)?\s*(명|건|회|다운로드|사용자|고객)/,why:"숫자는 실제 수치가 맞는지 확인이 필요합니다"},
+    {re:/\b(100|99)\s*%/,why:"100%·99% 같은 표현은 근거를 요구받습니다"},
+    {re:/(무제한|평생|영구)\s*(무료|제공|이용)?/,why:"무제한·평생 약속은 지키기 어렵습니다"},
+    {re:/(수상|선정|인증|공식\s*파트너)/,why:"수상·인증·공식 표현은 실제 근거가 있어야 합니다"},
+    {re:/(절대|반드시|100프로|무조건)/,why:"단정 표현은 과장으로 읽힙니다"},
+    {re:/(1위|랭킹\s*\d|베스트셀러)/,why:"순위 표현은 출처 표기가 필요합니다"}
+  ];
+  function riskOf(t){
+    var out=[];
+    for(var i=0;i<RISKY.length;i++){ var m=String(t||"").match(RISKY[i].re); if(m) out.push({hit:m[0],why:RISKY[i].why}); }
+    return out;
+  }
+  var MAXLEN=45;
   function ytId(u){
     u=String(u||"").trim();
     var m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
@@ -765,9 +874,21 @@ var app=(function(){
       render:function(o){return o.map(function(c){return '<div class="blk"><h4>'+c.n+'단계 · '+esc(c.step)+'</h4><b>할 일:</b> '+esc(c.do_)+'<br><b>보이는 것:</b> '+esc(c.see)+(c.tip?'<br><span style="color:var(--dim)">💡 '+esc(c.tip)+'</span>':'')+'</div>';}).join("");},
       text:function(o){return "["+nm()+" 사용법]\n\n"+o.map(function(c){return c.n+"단계. "+c.step+"\n  할 일: "+c.do_+"\n  보이는 것: "+c.see+(c.tip?"\n  팁: "+c.tip:"");}).join("\n\n");} }
   };
-  function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span><span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");
+  function renderScenes(){var g=document.getElementById("scenegrid"),html="",riskN=0,longN=0;
+    for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];
+      var rk=riskOf(s.text), isLong=String(s.text||"").length>MAXLEN;
+      if(rk.length) riskN++; if(isLong) longN++;
+      var chips="";
+      if(rk.length) chips+='<span class="warnchip" data-testid="risk-'+s.idx+'" title="'+esc(rk[0].why)+'">⚠️ 확인 필요: '+esc(rk[0].hit)+'</span> ';
+      if(isLong) chips+='<span class="warnchip" data-testid="long-'+s.idx+'">✂️ '+String(s.text).length+'자 — 45자 이내 권장</span>';
+      var hint=s.hint?('<span class="rolehint" data-testid="hint-'+s.idx+'" style="color:var(--acc2)">🎨 '+esc(s.hint)+'</span>'):"";
+      html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}
+    state._riskN=riskN;g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");
     var cc=document.getElementById("scenecount");
-    if(cc){var tot=0;for(var q=0;q<state.scenes.length;q++)tot+=(state.scenes[q].dur||3);cc.textContent="현재 "+state.scenes.length+"장면 · 약 "+tot+"초";}
+    if(cc){var tot=0;for(var q=0;q<state.scenes.length;q++)tot+=(state.scenes[q].dur||3);
+      cc.innerHTML="현재 "+state.scenes.length+"장면 · 약 "+tot+"초"+
+        (riskN?' · <span style="color:var(--warn)">⚠️ 확인 필요한 문구 '+riskN+'개</span>':'')+
+        (longN?' · <span style="color:var(--dim)">✂️ 긴 문구 '+longN+'개</span>':'');}
     try{renderFontBar();applyFont();}catch(e){}}
   async function generateAndShow(){
     ONBO.step(3,"exit"); ONBO.step(4,"enter"); /*STEP:4*/
@@ -798,7 +919,7 @@ var app=(function(){
           if(o){
             state.name=o.n||""; state.desc=o.d||""; state.goal=o.g||"activation"; state.audience=o.a||null;
             state.tone=o.t||"plain"; state.brand=o.b||"default"; state.font=o.ft||"sans"; state.feats=o.f||[];
-            state.scenes=(o.s||[]).map(function(x,i){return {idx:i+1,role:x[0],text:x[1],dur:x[2]||3};});
+            state.scenes=(o.s||[]).map(function(x,i){return {idx:i+1,role:x[0],text:x[1],dur:x[2]||3,hint:x[3]||undefined};});
             ONBO.card("share_open",String(state.scenes.length));
             ONBO.step(2,"exit"); /*STEP:2*/ ONBO.step(3,"enter"); /*STEP:3*/ ONBO.step(3,"exit"); /*STEP:3*/
             ONBO.step(4,"enter"); /*STEP:4*/ ONBO.step(4,"exit"); /*STEP:4*/ ONBO.step(5,"enter"); /*STEP:5*/
@@ -949,6 +1070,39 @@ var app=(function(){
       ONBO.card("sd_yt","ok");
       await app.extract(false);
     },
+    /* v0.12.0 여러 파일 한 번에 */
+    onFiles:async function(list){
+      var files=[].slice.call(list||[]).slice(0,5);
+      if(!files.length) return;
+      if(files.length===1) return app.onFile(files[0]);
+      var st=document.getElementById("sd-file-status");
+      ONBO.card("sd_files",String(files.length));
+      var parts=[],failed=[];
+      for(var i=0;i<files.length;i++){
+        var f=files[i];
+        st.innerHTML='📄 <b>'+esc(f.name)+'</b> 읽는 중… ('+(i+1)+'/'+files.length+')';
+        if(f.size>25*1024*1024){ failed.push(f.name+"(25MB 초과)"); continue; }
+        try{
+          var t=await extractFileText(f);
+          t=(t||"").replace(/\s+\n/g,"\n").trim();
+          if(t.length<20){ failed.push(f.name+"(글자 거의 없음)"); continue; }
+          parts.push("── "+f.name+" ──\n"+t);
+        }catch(e){ failed.push(f.name+"("+String(e&&e.message||e)+")"); }
+      }
+      if(!parts.length){
+        st.innerHTML='<span class="warn">고른 파일에서 글자를 읽지 못했어요'+(failed.length?(' ('+esc(failed.join(", "))+')'):'')+'. 내용을 복사해 <b>붙여넣기</b> 탭에 넣어주세요.</span>';
+        ONBO.card("sd_files","fail"); return;
+      }
+      var joined=parts.join("\n\n");
+      var over=joined.length>8000;
+      if(over) joined=joined.slice(0,8000);
+      document.getElementById("sd-text").value=joined;
+      st.innerHTML='✅ 파일 <b>'+parts.length+'개</b>에서 '+joined.length+'자를 합쳐 읽었어요'+
+        (over?' <span class="warn">(너무 길어 앞부분 8000자만 사용)</span>':'')+
+        (failed.length?('<div class="warn">건너뛴 파일: '+esc(failed.join(", "))+'</div>'):'')+
+        '<div>핵심 요소를 뽑는 중…</div>';
+      await app.extract(true);
+    },
     /* v0.7.0 파일 입력 */
     onFile:async function(f){
       if(!f) return;
@@ -971,17 +1125,83 @@ var app=(function(){
       st.innerHTML='✅ <b>'+esc(f.name)+'</b>에서 '+txt.length+'자를 읽었어요. 핵심 요소를 뽑는 중…';
       await app.extract(true);
     },
+    /* v0.12.0 장면별 그림 힌트 — 제작·외주 전달용 */
+    makeHints:async function(){
+      app.commitOpenEditor();
+      var st=document.getElementById("cz-status");
+      st.innerHTML='🎨 장면마다 어떤 그림이 어울릴지 정리하는 중…';
+      ONBO.card("hints","try");
+      var sc=state.scenes||[];
+      var prompt=["아래 온보딩 장면마다 '어떤 화면·그림을 보여주면 좋을지'를 한 줄로 제안하세요.",
+        "제품: "+srcLine(),
+        "장면 목록:",
+        sc.map(function(x){return x.idx+". ["+x.role+"] "+x.text;}).join("\n"),
+        "규칙: 각 줄은 25자 이내. 실제로 존재하는지 모르는 화면 이름은 지어내지 말고 일반적 표현을 쓸 것.",
+        "출력은 JSON 배열만: [\"장면1 힌트\",\"장면2 힌트\", ...] 정확히 "+sc.length+"개."].join("\n");
+      var r=await callProxy(prompt);
+      var arr=r?jparse(r.text):null;
+      var real=Array.isArray(arr)&&arr.length>=sc.length;
+      var FALL={"훅":"큰 글씨 한 문장 + 인물 표정 클로즈업","문제":"막막한 상황을 보여주는 장면","해결":"제품 화면이 문제를 해결하는 순간",
+        "신뢰":"사용 후기나 실제 결과 화면","권한":"권한 안내 팝업을 담백하게","첫 행동":"버튼 하나를 강조한 화면","시작":"제품 로고 + 시작 버튼","마무리":"제품 로고 + 한 줄 문구"};
+      sc.forEach(function(x,i){
+        x.hint = real ? String(arr[i]||"").slice(0,40) : (FALL[x.role]||("‘"+String(x.text).slice(0,12)+"…’ 를 표현하는 화면"));
+      });
+      snapshot("그림 힌트 추가");
+      renderScenes(); saveDraft();
+      ONBO.card("hints",real?"ai":"local");
+      st.innerHTML=real?'🎨 <b>진짜 AI</b>가 장면마다 그림 힌트를 붙였어요. 워드·PPT·문서 저장에 함께 들어갑니다.'
+        :'<span class="warn">AI 연결이 안 돼서 <b>기본 규칙</b>으로 그림 힌트를 붙였어요. 장면을 눌러 고칠 수 있습니다.</span>';
+    },
     /* v0.11.0 되돌리기 */
     undo:function(){
       var st=document.getElementById("cz-status");
       if(!UNDO.length){ if(st) st.innerHTML='되돌릴 작업이 없어요.'; return; }
-      var u=UNDO.pop();
-      state.scenes=u.scenes; state.name=u.name; state.tone=u.tone; state._edited=u.edited;
-      state.selected=-1; document.getElementById("editor").style.display="none";
-      ONBO.card("undo",u.label||"1");
-      document.getElementById("scenes-title").textContent="「"+nm()+"」 "+state.scenes.length+"장면 스토리";
+      REDO.push(snapState("되돌리기 취소"));
+      var u=UNDO.pop(); ONBO.card("undo",u.label||"1"); applySnap(u);
+      if(st) st.innerHTML='↩ <b>'+esc(u.label||"직전 작업")+'</b>을(를) 되돌렸어요. (되돌리기 '+UNDO.length+'회 · 다시하기 '+REDO.length+'회 남음)';
+    },
+    redo:function(){
+      var st=document.getElementById("cz-status");
+      if(!REDO.length){ if(st) st.innerHTML='다시할 작업이 없어요.'; return; }
+      UNDO.push(snapState("다시하기 취소"));
+      var r=REDO.pop(); ONBO.card("redo","1"); applySnap(r);
+      if(st) st.innerHTML='↪ 되돌렸던 작업을 <b>다시 적용</b>했어요. (되돌리기 '+UNDO.length+'회 · 다시하기 '+REDO.length+'회 남음)';
+    },
+    /* v0.12.0 장면 복제 */
+    dupScene:function(){
+      var i=state.selected; if(i<0) return;
+      if(state.scenes.length>=30){ var s9=document.getElementById("cz-status"); if(s9) s9.innerHTML='<span class="warn">장면은 최대 30개까지예요.</span>'; return; }
+      app.commitOpenEditor(); snapshot("장면 복제");
+      var src=state.scenes[i];
+      state.scenes.splice(i+1,0,{idx:i+2,role:src.role,text:src.text,dur:src.dur||3,hint:src.hint});
+      for(var k=0;k<state.scenes.length;k++) state.scenes[k].idx=k+1;
+      state.selected=i+1; state._s6saved=false;
+      document.getElementById("ed-title").textContent="#"+(i+2)+" · "+src.role;
       renderScenes(); saveDraft();
-      if(st) st.innerHTML='↩ <b>'+esc(u.label||"직전 작업")+'</b>을(를) 되돌렸어요. (남은 되돌리기 '+UNDO.length+'회)';
+      var n9=document.getElementById("nudge");
+      if(n9) n9.innerHTML='⧉ 장면을 복제했어요. 복제본 문구를 고쳐 <b>다른 버전</b>으로 만들어 보세요.';
+    },
+    /* v0.12.0 총 길이 자동 맞추기 */
+    fitTotal:function(target){
+      app.commitOpenEditor(); snapshot("길이 자동 맞추기");
+      var sc=state.scenes||[], n2=sc.length; if(!n2) return;
+      var base=Math.max(2,Math.floor(target/n2)), rest=target-base*n2;
+      for(var i=0;i<n2;i++) sc[i].dur=base+(i<rest?1:0);
+      renderScenes(); saveDraft(); ONBO.card("fit_total",String(target));
+      var tot=sc.reduce(function(a,b){return a+(b.dur||3);},0);
+      var st=document.getElementById("cz-status");
+      if(st) st.innerHTML='⏱ 장면 '+n2+'개에 시간을 고르게 나눠 <b>총 '+tot+'초</b>로 맞췄어요. 장면을 눌러 개별 조정도 됩니다.';
+    },
+    /* v0.12.0 긴급 백업 내려받기 — 저장 실패 시 복구 경로 */
+    backupNow:function(){
+      try{
+        var payload={app:"onbo-studio",kind:"backup",version:CONTRACT.version,savedAt:new Date().toISOString(),draft:draftPayload()};
+        var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+        dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_백업.json",true);
+        ONBO.card("backup","ok");
+        var m=document.getElementById("savemsg");
+        if(m) m.innerHTML+=' <span style="color:var(--acc2)">— 백업 파일을 내려받았습니다.</span>';
+      }catch(e){ ONBO.card("backup","fail"); }
     },
     /* v0.11.0 공유 링크 — 서버 없이 결과 전체를 주소에 담아 전달 */
     shareLink:function(){
@@ -1142,7 +1362,8 @@ var app=(function(){
     /* v0.10.0 워드에서 열리는 문서(.doc) — 회사 보고용 */
     exportDOC:function(){
       var f=feats(), B=brand(), FF=font().ppt, sc=state.scenes||[];
-      var rows=sc.map(function(x){return '<tr><td style="text-align:center">'+x.idx+'</td><td>'+esc(x.role||"")+'</td><td>'+esc(x.text||"")+'</td><td style="text-align:center">'+(x.dur||3)+'초</td></tr>';}).join("");
+      var anyHint=sc.some(function(x){return !!x.hint;});
+      var rows=sc.map(function(x){return '<tr><td style="text-align:center">'+x.idx+'</td><td>'+esc(x.role||"")+'</td><td>'+esc(x.text||"")+'</td>'+(anyHint?('<td>'+esc(x.hint||"")+'</td>'):'')+'<td style="text-align:center">'+(x.dur||3)+'초</td></tr>';}).join("");
       var extra=(window.__lastFmt&&window.__lastFmt.text)?('<h2>추가 형식 ('+esc(window.__lastFmt.key)+')</h2><pre style="white-space:pre-wrap;font-family:'+FF+'">'+esc(window.__lastFmt.text)+'</pre>'):'';
       var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'+
         '<head><meta charset="utf-8"><title>'+esc(nm())+' 온보딩 스토리</title>'+
@@ -1152,7 +1373,7 @@ var app=(function(){
         '<h2>한 장 요약</h2><p><b>목적:</b> '+esc(state.goal||"-")+'<br><b>대상:</b> '+esc(state.audience==="busy_doer"?"바쁜 실무자":state.audience==="decision_maker"?"결정권자":"일반 사용자")+
         '<br><b>말투:</b> '+(state.tone==="emotive"?"감성적":"담백함")+'<br><b>장면 수:</b> '+sc.length+'장면</p>'+
         '<h2>핵심 기능</h2><ul>'+f.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+'</ul>'+
-        '<h2>온보딩 스토리 구성</h2><table><tr><th style="width:6%">#</th><th style="width:16%">역할</th><th>문구</th><th style="width:8%">초</th></tr>'+rows+'</table>'+
+        '<h2>온보딩 스토리 구성</h2><table><tr><th style="width:6%">#</th><th style="width:14%">역할</th><th>문구</th>'+(anyHint?'<th style="width:22%">그림 힌트</th>':'')+'<th style="width:7%">초</th></tr>'+rows+'</table>'+
         extra+
         '<h2>다음 단계</h2><ol><li>이해관계자 검토 후 장면별 문구 확정</li><li>장면표 그대로 제작 또는 외주 전달</li><li>노출 위치 결정(앱 첫 실행·스토어·SNS)</li><li>완주율·이탈 지점 측정 후 문구 재조정</li></ol>'+
         '<p style="color:#7a7a7a;font-size:9pt;margin-top:20pt">온보 스튜디오 v'+CONTRACT.version+' · 엔진: '+(state._engine==="gemini"?"진짜 AI":"기본 문구")+'</p>'+
@@ -1178,6 +1399,21 @@ var app=(function(){
       renderScenes(); saveDraft();
       var n=document.getElementById("nudge");
       if(n) n.innerHTML='↕️ 장면 순서를 바꿨어요. 번호는 자동으로 다시 매겨집니다.';
+    },
+    histRename:function(i){
+      var all=histAll(); if(!all[i]) return;
+      var nn=prompt("이 기록의 이름을 무엇으로 바꿀까요?",all[i].name);
+      if(!nn||nn===all[i].name) return;
+      all[i].name=nn;
+      try{ localStorage.setItem(HKEY,JSON.stringify(all)); }catch(e){}
+      ONBO.card("hist_rename","1"); renderHist();
+    },
+    histDelete:function(i){
+      var all=histAll(); if(!all[i]) return;
+      if(!confirm("「"+all[i].name+"」 기록을 지울까요? (지금 만들고 있는 내용에는 영향이 없습니다)")) return;
+      all.splice(i,1);
+      try{ localStorage.setItem(HKEY,JSON.stringify(all)); }catch(e){}
+      ONBO.card("hist_delete","1"); renderHist();
     },
     loadHist:function(i){
       var h=histAll()[i]; if(!h) return;
@@ -1249,8 +1485,9 @@ var app=(function(){
       var md="# "+nm()+"\n\n> "+ds()+"\n\n";
       md+="- 목적: "+(state.goal||"-")+"\n- 대상: "+(state.audience||"-")+"\n- 말투: "+(state.tone==="emotive"?"감성":"담백")+"\n- 브랜드 색: "+b.n+"\n- 글꼴: "+font().n+"\n\n";
       md+="## 핵심 기능\n"+f.map(function(x){return "- "+x;}).join("\n")+"\n\n";
-      md+="## 온보딩 "+(state.scenes||[]).length+"장면\n\n| # | 역할 | 문구 | 초 |\n|---|---|---|---|\n";
-      (state.scenes||[]).forEach(function(sc){ md+="| "+sc.idx+" | "+sc.role+" | "+String(sc.text).replace(/\|/g,"/")+" | "+(sc.dur||3)+" |\n"; });
+      var ah=(state.scenes||[]).some(function(x){return !!x.hint;});
+      md+="## 온보딩 "+(state.scenes||[]).length+"장면\n\n| # | 역할 | 문구 |"+(ah?" 그림 힌트 |":"")+" 초 |\n|---|---|---|"+(ah?"---|":"")+"---|\n";
+      (state.scenes||[]).forEach(function(sc){ md+="| "+sc.idx+" | "+sc.role+" | "+String(sc.text).replace(/\|/g,"/")+" |"+(ah?(" "+String(sc.hint||"").replace(/\|/g,"/")+" |"):"")+" "+(sc.dur||3)+" |\n"; });
       if(window.__lastFmt&&window.__lastFmt.text) md+="\n## 추가로 만든 형식 ("+window.__lastFmt.key+")\n\n"+window.__lastFmt.text+"\n";
       md+="\n---\n온보 스튜디오 v"+CONTRACT.version+" · 엔진: "+(state._engine==="gemini"?"진짜 AI":"기본 문구")+"\n";
       var blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
@@ -1389,6 +1626,21 @@ document.addEventListener("DOMContentLoaded",function(){
   ["in-name","in-desc"].forEach(function(id){document.getElementById(id).addEventListener("input",app.onInput);});
   document.querySelectorAll('#scr-intro-aud .opt').forEach(function(o){o.onclick=function(){app.pickAud(o.dataset.aud,o);};o.onkeydown=function(e){app.kbV(e,function(){app.pickAud(o.dataset.aud,o);});};});
   document.querySelectorAll('#scr-intro-tone .abcard').forEach(function(o){o.onclick=function(){app.pickTone(o.dataset.tone,o);};o.onkeydown=function(e){app.kbV(e,function(){app.pickTone(o.dataset.tone,o);});};});
+  /* v0.12.0 오프라인 감지 — 앱은 멈추지 않고 사실만 알린다 */
+  function offSync(){ var b=document.getElementById("offbar"); if(b) b.classList.toggle("on",!navigator.onLine); }
+  window.addEventListener("online",function(){offSync();ONBO.card("net","online");});
+  window.addEventListener("offline",function(){offSync();ONBO.card("net","offline");});
+  offSync();
+  /* v0.12.0 단축키: Ctrl+Z 되돌리기 / Ctrl+Shift+Z·Ctrl+Y 다시하기 / Ctrl+S 백업 */
+  document.addEventListener("keydown",function(e){
+    var t=e.target||{}, tag=(t.tagName||"").toLowerCase();
+    if(tag==="input"||tag==="textarea"||t.isContentEditable) return;
+    if(!document.getElementById("scr-scenes").classList.contains("active")) return;
+    var mod=e.ctrlKey||e.metaKey; if(!mod) return;
+    if(e.key==="z"||e.key==="Z"){ e.preventDefault(); if(e.shiftKey) app.redo(); else app.undo(); }
+    else if(e.key==="y"||e.key==="Y"){ e.preventDefault(); app.redo(); }
+    else if(e.key==="s"||e.key==="S"){ e.preventDefault(); app.backupNow(); }
+  });
   /* v0.10.0 미리보기 조작: 화면 탭=다음 장면, ESC=종료 */
   var pvEl=document.getElementById("pv");
   if(pvEl) pvEl.addEventListener("click",function(e){ if(e.target&&e.target.classList&&e.target.classList.contains("pvclose")) return; app.pvNext(); });
