@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.8.0 (파일입력·요소허브)</title>
+<title>온보 스튜디오 — pre-alpha v0.9.0 (파일입력·요소허브)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.8.0","steps":[
+{"version":"0.9.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -65,6 +65,9 @@
   #rvcode{cursor:pointer;font-family:monospace;font-size:11px;color:var(--acc2);background:#12141c;border:1px solid var(--line);border-radius:5px;padding:9px 10px;min-height:36px;display:inline-flex;align-items:center;}
   /* v0.6.1 다른 형식(요약) */
   .scene{position:relative;}
+  .rolehint{display:block;margin-top:6px;font-size:11px;color:var(--dim);line-height:1.5;}
+  .ytrow{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .ytrow input{margin:0;flex:1;}
   .swatch{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#12141c;color:var(--dim);font-size:12px;cursor:pointer;}
   .swatch.on{border-color:var(--acc2);color:var(--txt);}
   .swatch i{width:14px;height:14px;border-radius:50%;display:inline-block;}
@@ -108,7 +111,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.8.0 · 파일입력·요소허브 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.9.0 · 파일입력·요소허브 · 내부용</span>
 </header>
 <main>
 
@@ -140,6 +143,7 @@
     <button id="sd-tab-manual" class="sdtab on" data-testid="sd-tab-manual" onclick="app.sdMode('manual')">✍ 직접 입력</button>
     <button id="sd-tab-paste" class="sdtab" data-testid="sd-tab-paste" onclick="app.sdMode('paste')">📋 붙여넣기</button>
     <button id="sd-tab-file" class="sdtab" data-testid="sd-tab-file" onclick="app.sdMode('file')">📎 파일</button>
+    <button id="sd-tab-yt" class="sdtab" data-testid="sd-tab-yt" onclick="app.sdMode('yt')">🎬 유튜브</button>
   </div>
   <div id="sd-paste-block" style="display:none">
     <label>기획서·소개글을 통째로 붙여넣으세요 (앱 설명, 스토어 소개글 등)</label>
@@ -154,6 +158,11 @@
     </div>
     <input type="file" id="sd-file" data-testid="sd-file" accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md" style="display:none" onchange="app.onFile(this.files&&this.files[0])">
     <div id="sd-file-status" class="sdstatus"></div>
+  </div>
+  <div id="sd-yt-block" style="display:none">
+    <label>유튜브 영상 주소를 붙여넣으세요 (자막이 있는 영상)</label>
+    <div class="ytrow"><input type="text" id="sd-yt" data-testid="sd-yt" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off"><button class="btn" data-testid="btn-yt" onclick="app.fetchYT()" style="margin-top:0">가져오기</button></div>
+    <div id="sd-yt-status" class="sdstatus"></div>
   </div>
   <div id="hub" class="hub" style="display:none" data-testid="hub">
     <div class="hh">🧩 읽어낸 핵심 요소 — 맞는지 확인하고 고치세요 <span class="stub" id="hub-src">기본</span></div>
@@ -200,7 +209,7 @@
 <section class="screen" id="scr-scenes">
   <div class="q" id="scenes-title">10장면 스토리</div>
   <div class="coach">💡 <b>장면을 눌러</b> 문구를 바로 고칠 수 있어요. 마음에 들면 <b>[내보내기]</b> 하면 끝! <span class="stub" id="engine-ind">엔진: 준비</span> <span class="stub" id="mode-ind"></span></div>
-  <div class="nudge" id="nudge">✏️ <b>마음에 안 드는 문구가 있나요?</b> 장면의 <b>[✏️ 고치기]</b>를 눌러 바로 바꿀 수 있어요. 다 됐으면 아래 <b>[JSON 내보내기]</b>로 끝냅니다.</div>
+  <div class="nudge" id="nudge">✅ <b>10장면이 나왔어요.</b> 이대로 괜찮으면 바로 <b>[JSON 내보내기]</b>로 끝내도 됩니다. 고치고 싶은 문구가 있으면 장면의 <b>[✏️ 고치기]</b>를 누르세요 — <b>선택 사항</b>입니다.</div>
   <div class="scenegrid" id="scenegrid"></div>
   <div class="editor" id="editor" style="display:none">
     <b id="ed-title" style="font-size:14px"></b>
@@ -237,13 +246,13 @@
 <section class="screen" id="scr-done">
   <div class="success"><div class="big">🎉</div><h2>내보내기 완료</h2></div>
   <div class="done-box"><p style="font-size:14px;line-height:1.7">인트로 답(목적·주인공·청중·톤)이 <code>brandProfile</code>까지 채워 10장면 스토리로 완성됐습니다.<br>회신: 하단 <code>RV 코드</code> 클릭(복사) 한 줄이면 충분합니다.</p></div>
-  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-md" onclick="app.exportMD()">📝 전체 문서(.md)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
+  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-md" onclick="app.exportMD()">📝 전체 문서(.md)</button><button class="btn green" data-testid="btn-report" onclick="app.exportReport()">📑 보고용 장표(.pptx)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
   <div id="pptx-status" class="sdstatus" style="display:none"></div>
 </section>
 
 </main>
 <footer>
-  <span>v0.8.0 · 브랜드·순서·히스토리</span>
+  <span>v0.9.0 · 유튜브·보고장표·역할가이드</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -512,6 +521,27 @@ var app=(function(){
     for(var k=0;k<pool.length;k++){ if(pool[k]&&pool[k]!==old) return pool[k]; }
     return pool[0]||old;
   }
+  /* v0.9.0 역할별 가이드 — 10장면 각각이 무슨 일을 하는지 알려준다 */
+  var ROLEHINT={
+    "훅":"첫 3초. 안 보면 손해라고 느끼게. 제품 이름보다 상대의 문제를 먼저.",
+    "문제":"보는 사람이 '내 얘기다' 하고 느낄 장면. 과장하지 말고 구체적으로.",
+    "해결":"제품이 그 문제를 어떻게 없애는지 한 문장. 기능 나열은 다음 장면에서.",
+    "기능①":"가장 강한 기능 하나. 무엇을 하는지가 아니라 무엇이 좋아지는지.",
+    "기능②":"두 번째 기능. 앞 장면과 다른 이득을 말해야 지루하지 않다.",
+    "기능③":"세 번째 기능. 여기까지가 '무엇을 주는가'.",
+    "신뢰":"왜 믿을 만한지. 숫자·후기·수상 등 사실만. 없으면 솔직한 근거로.",
+    "권한":"필요한 권한이나 조건을 미리 알린다. 갑자기 요구하면 이탈한다.",
+    "첫 행동":"지금 무엇을 누르면 되는지. 동사 하나로 짧게.",
+    "마무리":"기억에 남길 한 줄. 이름을 다시 한 번."
+  };
+  function roleHint(r){ return ROLEHINT[r]||"이 장면이 맡은 역할에 맞게 한 문장으로."; }
+  function ytId(u){
+    u=String(u||"").trim();
+    var m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
+    if(m) return m[1];
+    if(/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+    return null;
+  }
   function localIR(txt){
     var raw=String(txt||"").trim(); if(raw.length<20) return null;
     var clean=function(x){return String(x).replace(/^["'\s\-*>#•]+/,"").replace(/["'\s]+$/,"").replace(/\s+/g," ").trim();};
@@ -629,7 +659,7 @@ var app=(function(){
       render:function(o){return o.map(function(c){return '<div class="blk"><h4>'+c.n+'단계 · '+esc(c.step)+'</h4><b>할 일:</b> '+esc(c.do_)+'<br><b>보이는 것:</b> '+esc(c.see)+(c.tip?'<br><span style="color:var(--dim)">💡 '+esc(c.tip)+'</span>':'')+'</div>';}).join("");},
       text:function(o){return "["+nm()+" 사용법]\n\n"+o.map(function(c){return c.n+"단계. "+c.step+"\n  할 일: "+c.do_+"\n  보이는 것: "+c.see+(c.tip?"\n  팁: "+c.tip:"");}).join("\n\n");} }
   };
-  function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");}
+  function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span><span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");}
   async function generateAndShow(){
     ONBO.step(3,"exit"); ONBO.step(4,"enter"); /*STEP:4*/
     document.getElementById("scenes-title").textContent="「"+nm()+"」 10장면 스토리";
@@ -746,13 +776,42 @@ var app=(function(){
     downloadFmt:function(){var f=window.__lastFmt||{text:"",key:"out"};var blob=new Blob([f.text],{type:"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(nm()||"onbo")+"_"+f.key+".txt";a.click();},
     /* v0.6.1 소스드롭 */
     sdMode:function(m){
-      var isPaste=(m==="paste"), isFile=(m==="file");
-      document.getElementById("sd-tab-manual").classList.toggle("on",!isPaste&&!isFile);
+      var isPaste=(m==="paste"), isFile=(m==="file"), isYT=(m==="yt");
+      document.getElementById("sd-tab-manual").classList.toggle("on",!isPaste&&!isFile&&!isYT);
       document.getElementById("sd-tab-paste").classList.toggle("on",isPaste);
       var ft=document.getElementById("sd-tab-file"); if(ft) ft.classList.toggle("on",isFile);
+      var yt=document.getElementById("sd-tab-yt"); if(yt) yt.classList.toggle("on",isYT);
       document.getElementById("sd-paste-block").style.display=isPaste?"block":"none";
       var fb=document.getElementById("sd-file-block"); if(fb) fb.style.display=isFile?"block":"none";
+      var yb=document.getElementById("sd-yt-block"); if(yb) yb.style.display=isYT?"block":"none";
       ONBO.card("sd_mode",m);
+    },
+    /* v0.9.0 유튜브 입력 — 중계 서버 /fetch 경유(브라우저는 유튜브를 직접 못 읽음) */
+    fetchYT:async function(){
+      var url=(document.getElementById("sd-yt").value||"").trim();
+      var st=document.getElementById("sd-yt-status");
+      var id=ytId(url);
+      if(!id){ st.innerHTML='<span class="warn">유튜브 주소가 아닌 것 같아요. 예: https://www.youtube.com/watch?v=xxxxxxxxxxx</span>'; return; }
+      ONBO.card("sd_yt","try");
+      st.innerHTML='🎬 자막을 가져오는 중… <span style="font-size:11px">(최대 20초)</span>';
+      var txt=null;
+      try{
+        var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort();},20000);
+        var res=await fetch(PROXY_URL+"/fetch?kind=yt&id="+encodeURIComponent(id),{signal:ctrl.signal});
+        clearTimeout(to);
+        if(res.ok){ var d=await res.json(); if(d&&d.ok&&d.text&&d.text.length>50) txt=d.text; }
+      }catch(e){}
+      if(!txt){
+        ONBO.card("sd_yt","unavailable");
+        st.innerHTML='<span class="warn">지금은 유튜브에서 바로 가져올 수 없어요(중계 서버에 유튜브 기능이 아직 없습니다).<br>'+
+          '<b>대신 이렇게 하세요</b>: 유튜브 영상 아래 <b>[더보기] → [스크립트 표시]</b>에서 자막을 복사한 뒤, 위 <b>[📋 붙여넣기]</b> 탭에 넣고 [읽어서 채우기]를 누르면 똑같이 됩니다.</span>';
+        return;
+      }
+      if(txt.length>8000) txt=txt.slice(0,8000);
+      document.getElementById("sd-text").value=txt;
+      st.innerHTML='✅ 자막 '+txt.length+'자를 가져왔어요. 핵심 요소를 뽑는 중…';
+      ONBO.card("sd_yt","ok");
+      await app.extract(false);
     },
     /* v0.7.0 파일 입력 */
     onFile:async function(f){
@@ -802,6 +861,61 @@ var app=(function(){
       ONBO.step(4,"enter"); /*STEP:4*/ ONBO.step(4,"exit"); /*STEP:4*/ ONBO.step(5,"enter"); /*STEP:5*/
       document.getElementById("scenes-title").textContent="「"+h.name+"」 "+h.scenes.length+"장면 스토리";
       show("scr-scenes"); renderScenes(); renderBrandBar(); ONBO.step(5,"exit");
+    },
+    /* v0.9.0 보고용 장표 — 사내 보고 포맷(표지·한장요약·핵심기능·스토리표·다음단계) */
+    exportReport:async function(){
+      var st2=function(h){var d=document.getElementById("pptx-status"); if(d){d.style.display="block"; d.innerHTML=h;}};
+      try{
+        st2("📑 보고용 장표를 만드는 중…");
+        await loadLib("pptx","PptxGenJS");
+        var P=window.PptxGenJS; if(!P) throw new Error("pptx-lib");
+        var B=brand(), f=feats(), sc=state.scenes||[];
+        var pres=new P(); pres.layout="LAYOUT_16x9";
+        var AC=B.p, INK="1A1A1A", MU="5B6080";
+        // 표지
+        var t=pres.addSlide();
+        t.addShape(pres.ShapeType.rect,{x:0,y:0,w:10,h:5.625,fill:{color:"0F1420"}});
+        t.addText(nm(),{x:0.7,y:1.9,w:8.6,h:0.9,fontSize:40,bold:true,color:"FFFFFF"});
+        t.addText(ds(),{x:0.7,y:2.85,w:8.6,h:0.6,fontSize:17,color:"C9D2E6"});
+        t.addText("온보딩 스토리 보고 · 총 "+sc.length+"장면 · 30초",{x:0.7,y:4.5,w:8.6,h:0.4,fontSize:12,color:"8D97B5"});
+        // 한 장 요약
+        var a=pres.addSlide();
+        a.addText("한 장 요약",{x:0.6,y:0.45,w:8.8,h:0.6,fontSize:28,bold:true,color:INK});
+        a.addText([
+          {text:"무엇: ",options:{bold:true}},{text:ds(),options:{breakLine:true}},
+          {text:"누구에게: ",options:{bold:true}},{text:(state.audience==="busy_doer"?"바쁜 실무자":state.audience==="decision_maker"?"결정권자":"일반 사용자"),options:{breakLine:true}},
+          {text:"목적: ",options:{bold:true}},{text:(state.goal||"-"),options:{breakLine:true}},
+          {text:"말투: ",options:{bold:true}},{text:(state.tone==="emotive"?"감성적":"담백함"),options:{breakLine:false}}
+        ],{x:0.6,y:1.35,w:8.8,h:1.6,fontSize:15,color:INK,paraSpaceAfter:6});
+        a.addText("핵심 기능",{x:0.6,y:3.05,w:8.8,h:0.4,fontSize:15,bold:true,color:AC});
+        a.addText(f.map(function(x,i){return {text:x,options:{bullet:true,breakLine:i<f.length-1}};}),
+          {x:0.6,y:3.5,w:8.8,h:1.5,fontSize:14,color:MU,paraSpaceAfter:6});
+        // 스토리 표
+        var g=pres.addSlide();
+        g.addText("30초 스토리 구성",{x:0.6,y:0.45,w:8.8,h:0.6,fontSize:28,bold:true,color:INK});
+        var rows=[[{text:"#",options:{bold:true,color:"FFFFFF",fill:{color:AC}}},
+                   {text:"역할",options:{bold:true,color:"FFFFFF",fill:{color:AC}}},
+                   {text:"문구",options:{bold:true,color:"FFFFFF",fill:{color:AC}}},
+                   {text:"초",options:{bold:true,color:"FFFFFF",fill:{color:AC}}}]];
+        sc.forEach(function(x){ rows.push([String(x.idx),String(x.role||""),String(x.text||""),String(x.dur||3)]); });
+        g.addTable(rows,{x:0.6,y:1.25,w:8.8,colW:[0.5,1.4,6.3,0.6],fontSize:11,color:INK,border:{pt:0.5,color:"DDE3F2"},valign:"middle",rowH:0.3});
+        // 다음 단계
+        var n=pres.addSlide();
+        n.addText("다음 단계",{x:0.6,y:0.45,w:8.8,h:0.6,fontSize:28,bold:true,color:INK});
+        [["1. 문구 확정","이해관계자 검토 후 장면별 문구 확정"],
+         ["2. 제작","영상/이미지 제작 또는 외주 전달 (장면표 그대로 사용)"],
+         ["3. 배치","앱 첫 실행·스토어·SNS 중 노출 위치 결정"],
+         ["4. 측정","완주율·이탈 지점 확인 후 문구 재조정"]].forEach(function(r,i){
+          n.addText(r[0],{x:0.7,y:1.35+i*0.85,w:2.6,h:0.4,fontSize:15,bold:true,color:AC});
+          n.addText(r[1],{x:3.4,y:1.35+i*0.85,w:6.0,h:0.6,fontSize:13,color:MU});
+        });
+        await pres.writeFile({fileName:(nm()||"onbo")+"_보고용장표.pptx"});
+        ONBO.card("export_report","ok");
+        st2("✅ 보고용 장표를 저장했어요. 표지·한장요약·스토리표·다음단계 4장입니다.");
+      }catch(e){
+        ONBO.card("export_report","fail");
+        st2('<span class="warn">보고용 장표 저장에 실패했어요('+esc(String(e&&e.message||e))+'). 인터넷 연결을 확인하고 다시 눌러보세요.</span>');
+      }
     },
     exportMD:function(){
       var f=feats(), b=brand();
