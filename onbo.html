@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.7.1 (파일입력·요소허브)</title>
+<title>온보 스튜디오 — pre-alpha v0.7.2 (파일입력·요소허브)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.7.1","steps":[
+{"version":"0.7.2","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -95,7 +95,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.7.1 · 파일입력·요소허브 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.7.2 · 파일입력·요소허브 · 내부용</span>
 </header>
 <main>
 
@@ -221,11 +221,12 @@
   <div class="success"><div class="big">🎉</div><h2>내보내기 완료</h2></div>
   <div class="done-box"><p style="font-size:14px;line-height:1.7">인트로 답(목적·주인공·청중·톤)이 <code>brandProfile</code>까지 채워 10장면 스토리로 완성됐습니다.<br>회신: 하단 <code>RV 코드</code> 클릭(복사) 한 줄이면 충분합니다.</p></div>
   <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
+  <div id="pptx-status" class="sdstatus" style="display:none"></div>
 </section>
 
 </main>
 <footer>
-  <span>v0.7.1 · 파일입력·허브·재생성</span>
+  <span>v0.7.2 · 파일입력·허브·재생성</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -354,25 +355,42 @@ var app=(function(){
     }catch(e){return null;}
   }
   /* ===== v0.7.0 파일 입력: 브라우저 내 추출(서버 전송 0) ===== */
-  var CDN={
-    pdf:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-    pdfw:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
-    mammoth:"https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
-    jszip:"https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
-    xlsx:"https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
-    pptx:"https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"
+  /* v0.7.2 CDN: npm 미러 2곳 이중화(첫 번째 실패 시 자동 대체).
+     근거: cdnjs 경로 404 실측(2026-07-26 라이브 로그 export_pptx=fail) */
+  var CDNB=["https://cdn.jsdelivr.net/npm/","https://unpkg.com/"];
+  var LIB={
+    pdf:"pdfjs-dist@3.11.174/build/pdf.min.js",
+    mammoth:"mammoth@1.6.0/mammoth.browser.min.js",
+    jszip:"jszip@3.10.1/dist/jszip.min.js",
+    xlsx:"xlsx@0.18.5/dist/xlsx.full.min.js",
+    pptx:"pptxgenjs@3.12.0/dist/pptxgen.bundle.js"
   };
+  var PDFBASE=CDNB[0]+"pdfjs-dist@3.11.174/";
   var _libs={};
-  function loadLib(url){
-    if(_libs[url]) return _libs[url];
-    _libs[url]=new Promise(function(res,rej){
+  function loadOne(url){
+    return new Promise(function(res,rej){
       var t=setTimeout(function(){rej(new Error("timeout"));},15000);
       var el=document.createElement("script"); el.src=url; el.async=true;
       el.onload=function(){clearTimeout(t);res(true);};
       el.onerror=function(){clearTimeout(t);rej(new Error("load-fail"));};
       document.head.appendChild(el);
     });
-    return _libs[url];
+  }
+  function loadLib(key,globalName){
+    if(_libs[key]) return _libs[key];
+    var path=LIB[key];
+    _libs[key]=(async function(){
+      var lastErr=null;
+      for(var i=0;i<CDNB.length;i++){
+        try{
+          await loadOne(CDNB[i]+path);
+          if(!globalName||window[globalName]){ if(key==="pdf") PDFBASE=CDNB[i]+"pdfjs-dist@3.11.174/"; return true; }
+          lastErr=new Error("global-missing");
+        }catch(e){ lastErr=e; }
+      }
+      throw lastErr||new Error("load-fail");
+    })();
+    return _libs[key];
   }
   function fileExt(f){var n=(f&&f.name||"").toLowerCase();var m=n.match(/\.([a-z0-9]+)$/);return m?m[1]:"";}
   async function readAB(f){return await f.arrayBuffer();}
@@ -380,24 +398,24 @@ var app=(function(){
     var ext=fileExt(f);
     if(ext==="txt"||ext==="md"||ext==="csv"&&false) return await f.text();
     if(ext==="pdf"){
-      await loadLib(CDN.pdf);
+      await loadLib("pdf","pdfjsLib");
       var lib=window.pdfjsLib; if(!lib) throw new Error("pdf-lib");
-      try{lib.GlobalWorkerOptions.workerSrc=CDN.pdfw;}catch(e){}
+      try{lib.GlobalWorkerOptions.workerSrc=PDFBASE+"build/pdf.worker.min.js";}catch(e){}
       var doc=await lib.getDocument({data:new Uint8Array(await readAB(f)),
-        cMapUrl:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",cMapPacked:true,
-        standardFontDataUrl:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/"}).promise;
+        cMapUrl:PDFBASE+"cmaps/",cMapPacked:true,
+        standardFontDataUrl:PDFBASE+"standard_fonts/"}).promise;
       var out=[],max=Math.min(doc.numPages,40);
       for(var i=1;i<=max;i++){var pg=await doc.getPage(i);var tc=await pg.getTextContent();out.push(tc.items.map(function(x){return x.str;}).join(" "));}
       return out.join("\n");
     }
     if(ext==="docx"){
-      await loadLib(CDN.mammoth);
+      await loadLib("mammoth","mammoth");
       if(!window.mammoth) throw new Error("docx-lib");
       var r=await window.mammoth.extractRawText({arrayBuffer:await readAB(f)});
       return (r&&r.value)||"";
     }
     if(ext==="pptx"){
-      await loadLib(CDN.jszip);
+      await loadLib("jszip","JSZip");
       if(!window.JSZip) throw new Error("pptx-lib");
       var zip=await window.JSZip.loadAsync(await readAB(f));
       var names=Object.keys(zip.files).filter(function(n){return /^ppt\/slides\/slide\d+\.xml$/.test(n);})
@@ -414,7 +432,7 @@ var app=(function(){
       return parts.join("\n");
     }
     if(ext==="xlsx"||ext==="xls"||ext==="csv"){
-      await loadLib(CDN.xlsx);
+      await loadLib("xlsx","XLSX");
       if(!window.XLSX) throw new Error("xlsx-lib");
       var wb=window.XLSX.read(new Uint8Array(await readAB(f)),{type:"array"});
       var rows=[];
@@ -725,9 +743,10 @@ var app=(function(){
       app.hubSync();
     },
     exportPPTX:async function(){
-      var st=document.getElementById("sd-file-status");
+      var st2=function(h){var d=document.getElementById("pptx-status"); if(d){d.style.display="block"; d.innerHTML=h;}};
       try{
-        await loadLib(CDN.pptx);
+        st2("📊 PPT 만드는 중…");
+        await loadLib("pptx","PptxGenJS");
         var P=window.PptxGenJS; if(!P) throw new Error("pptx-lib");
         var pres=new P(); pres.layout="LAYOUT_16x9";
         var title=pres.addSlide();
@@ -741,9 +760,10 @@ var app=(function(){
         });
         await pres.writeFile({fileName:(nm()||"onbo")+"_10scenes.pptx"});
         ONBO.card("export_pptx","ok");
+        st2("✅ PPT 파일을 저장했어요.");
       }catch(e){
         ONBO.card("export_pptx","fail");
-        alert("PPT 저장에 실패했어요. 인터넷 연결(라이브러리 다운로드)을 확인하거나 JSON/텍스트로 내보내 주세요.");
+        st2('<span class="warn">PPT 저장에 실패했어요('+esc(String(e&&e.message||e))+'). 인터넷 연결을 확인하고 다시 눌러보세요. 대신 <b>JSON 내보내기</b>나 형식별 <b>텍스트 저장</b>은 바로 됩니다.</span>');
       }
     },
     extract:async function(fromFile){
