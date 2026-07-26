@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.7.2 (파일입력·요소허브)</title>
+<title>온보 스튜디오 — pre-alpha v0.7.3 (파일입력·요소허브)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.7.2","steps":[
+{"version":"0.7.3","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -64,6 +64,11 @@
   .steps{display:flex;gap:5px;} .stepdot{width:22px;height:5px;border-radius:3px;background:var(--line);} .stepdot.on{background:var(--accbright);} .stepdot.done{background:var(--acc2);}
   #rvcode{cursor:pointer;font-family:monospace;font-size:11px;color:var(--acc2);background:#12141c;border:1px solid var(--line);border-radius:5px;padding:9px 10px;min-height:36px;display:inline-flex;align-items:center;}
   /* v0.6.1 다른 형식(요약) */
+  .scene{position:relative;}
+  .editbtn{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:34px;padding:0 12px;border-radius:8px;background:#1d2534;border:1px solid var(--line);color:var(--acc2);font-size:12px;font-weight:600;}
+  .scene.done .editbtn{color:var(--green);border-color:var(--green);}
+  .nudge{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#1a2030;border:1px solid var(--acc);color:var(--txt);font-size:13px;line-height:1.6;}
+  .nudge b{color:var(--acc2);}
   .dropzone{border:2px dashed var(--line);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;background:#12141c;margin-bottom:10px;}
   .dropzone.over{border-color:var(--acc2);background:#151a24;}
   .dropzone b{display:block;font-size:14px;margin-bottom:4px;}
@@ -95,7 +100,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.7.2 · 파일입력·요소허브 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.7.3 · 파일입력·요소허브 · 내부용</span>
 </header>
 <main>
 
@@ -186,6 +191,7 @@
 <section class="screen" id="scr-scenes">
   <div class="q" id="scenes-title">10장면 스토리</div>
   <div class="coach">💡 <b>장면을 눌러</b> 문구를 바로 고칠 수 있어요. 마음에 들면 <b>[내보내기]</b> 하면 끝! <span class="stub" id="engine-ind">엔진: 준비</span> <span class="stub" id="mode-ind"></span></div>
+  <div class="nudge" id="nudge">✏️ <b>마음에 안 드는 문구가 있나요?</b> 장면의 <b>[✏️ 고치기]</b>를 눌러 바로 바꿀 수 있어요. 다 됐으면 아래 <b>[JSON 내보내기]</b>로 끝냅니다.</div>
   <div class="scenegrid" id="scenegrid"></div>
   <div class="editor" id="editor" style="display:none">
     <b id="ed-title" style="font-size:14px"></b>
@@ -226,7 +232,7 @@
 
 </main>
 <footer>
-  <span>v0.7.2 · 파일입력·허브·재생성</span>
+  <span>v0.7.3 · 편집유도·엔진계측</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -576,7 +582,7 @@ var app=(function(){
       render:function(o){return o.map(function(c){return '<div class="blk"><h4>'+c.n+'단계 · '+esc(c.step)+'</h4><b>할 일:</b> '+esc(c.do_)+'<br><b>보이는 것:</b> '+esc(c.see)+(c.tip?'<br><span style="color:var(--dim)">💡 '+esc(c.tip)+'</span>':'')+'</div>';}).join("");},
       text:function(o){return "["+nm()+" 사용법]\n\n"+o.map(function(c){return c.n+"단계. "+c.step+"\n  할 일: "+c.do_+"\n  보이는 것: "+c.see+(c.tip?"\n  팁: "+c.tip:"");}).join("\n\n");} }
   };
-  function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");}
+  function renderScenes(){var g=document.getElementById("scenegrid"),html="";for(var i=0;i<state.scenes.length;i++){var s=state.scenes[i];html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}g.innerHTML=html;var mi=document.getElementById("mode-ind");if(mi)mi.textContent="톤: "+(state.tone==="emotive"?"B(감성)":"A(담백)");}
   async function generateAndShow(){
     ONBO.step(3,"exit"); ONBO.step(4,"enter"); /*STEP:4*/
     document.getElementById("scenes-title").textContent="「"+nm()+"」 10장면 스토리";
@@ -585,6 +591,7 @@ var app=(function(){
     var real=await realEngine(state.goal,nm(),ds(),feats(),state.audience,state.tone);
     state.scenes = real || stubEngine();
     state._engine = real ? "gemini" : "stub";
+    ONBO.card("engine", real ? ("gemini:"+(state._model||"?")) : "stub");
     var ei=document.getElementById("engine-ind");
     if(ei) ei.textContent = real ? ("엔진: 진짜 AI("+(state._model||"gemini")+")") : "엔진: 스텁(AI 실패→기본문구)";
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
@@ -810,7 +817,11 @@ var app=(function(){
     back:function(id){show(id);},
     openEditor:function(i){state.selected=i;state._s6saved=false;var s=state.scenes[i];ONBO.step(6,"enter"); /*STEP:6*/ document.getElementById("editor").style.display="block";document.getElementById("ed-title").textContent="#"+s.idx+" · "+s.role;document.getElementById("ed-text").value=s.text;renderScenes();},
     commitOpenEditor:function(){if(state.selected<0)return;state.scenes[state.selected].text=document.getElementById("ed-text").value;saveDraft();if(!state._s6saved){ONBO.step(6,"exit"); /*STEP:6*/ state._s6saved=true;}},
-    saveScene:function(){if(state.selected<0)return;app.commitOpenEditor();renderScenes();},
+    _markEdited:function(idx){ state._edited=state._edited||{}; state._edited[idx]=true;
+      var n=document.getElementById("nudge");
+      if(n) n.innerHTML='✅ <b>'+Object.keys(state._edited).length+'개 장면</b>을 고쳤어요. 더 고쳐도 되고, 아래 <b>[JSON 내보내기]</b>로 끝내도 됩니다.';
+    },
+    saveScene:function(){if(state.selected<0)return;app.commitOpenEditor();app._markEdited(state.scenes[state.selected].idx); renderScenes();},
     closeEditor:function(){app.commitOpenEditor();document.getElementById("editor").style.display="none";state.selected=-1;renderScenes();},
     exportJSON:function(){
       app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.6.1: 편집 자동저장(유실 방지) */
