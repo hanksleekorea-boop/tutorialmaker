@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.7.3 (파일입력·요소허브)</title>
+<title>온보 스튜디오 — pre-alpha v0.8.0 (파일입력·요소허브)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.7.3","steps":[
+{"version":"0.8.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -65,7 +65,15 @@
   #rvcode{cursor:pointer;font-family:monospace;font-size:11px;color:var(--acc2);background:#12141c;border:1px solid var(--line);border-radius:5px;padding:9px 10px;min-height:36px;display:inline-flex;align-items:center;}
   /* v0.6.1 다른 형식(요약) */
   .scene{position:relative;}
-  .editbtn{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:34px;padding:0 12px;border-radius:8px;background:#1d2534;border:1px solid var(--line);color:var(--acc2);font-size:12px;font-weight:600;}
+  .swatch{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#12141c;color:var(--dim);font-size:12px;cursor:pointer;}
+  .swatch.on{border-color:var(--acc2);color:var(--txt);}
+  .swatch i{width:14px;height:14px;border-radius:50%;display:inline-block;}
+  .hist{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#12141c;}
+  .hist b{font-size:13px;}
+  .histrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:12px;color:var(--dim);}
+  .histrow:first-of-type{border-top:none;}
+  .histrow button{min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12px;cursor:pointer;}
+  .editbtn{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:44px;padding:0 12px;border-radius:8px;background:#1d2534;border:1px solid var(--line);color:var(--acc2);font-size:12px;font-weight:600;}
   .scene.done .editbtn{color:var(--green);border-color:var(--green);}
   .nudge{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#1a2030;border:1px solid var(--acc);color:var(--txt);font-size:13px;line-height:1.6;}
   .nudge b{color:var(--acc2);}
@@ -100,7 +108,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.7.3 · 파일입력·요소허브 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.8.0 · 파일입력·요소허브 · 내부용</span>
 </header>
 <main>
 
@@ -112,6 +120,7 @@
 
 <!-- S2: 인트로 카드 1 — 목적 -->
 <section class="screen" id="scr-intro-goal">
+  <div class="hist" id="histbox" style="display:none" data-testid="histbox"><b>🗂 최근 만든 것</b><div id="histlist"></div></div>
   <div class="q">30초 안에, 무엇을 이루고 싶나요?</div>
   <div class="sub">입력한 앱 정보는 어디에도 저장·전송되지 않아요. 그냥 시작해봐요.</div>
   <div class="grid2">
@@ -196,7 +205,7 @@
   <div class="editor" id="editor" style="display:none">
     <b id="ed-title" style="font-size:14px"></b>
     <label>장면 문구</label><textarea id="ed-text" data-testid="ed-text"></textarea>
-    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
+    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
   <div class="row"><button class="btn green" data-testid="btn-export" onclick="app.exportJSON()">JSON 내보내기 ⬇</button><button class="btn ghost" data-testid="btn-reset" onclick="location.reload()">처음부터(리셋)</button></div>
   <div class="fmtbar" style="margin-top:16px">
@@ -206,6 +215,8 @@
       <button class="fmttile" data-testid="cz-emotive" onclick="app.setTone('emotive')">🔥 감성적으로</button>
       <button class="fmttile" data-testid="cz-rename" onclick="app.renameAll()">✏️ 이름 한 번에 바꾸기</button>
     </div>
+    <div class="fmtlabel" style="margin-top:12px">🎨 <b>브랜드 색</b> — 저장하는 이미지·PPT에 적용됩니다:</div>
+    <div class="fmttiles" id="brandbar"></div>
     <div id="cz-status" class="sdstatus"></div>
   </div>
   <div class="fmtbar">
@@ -226,13 +237,13 @@
 <section class="screen" id="scr-done">
   <div class="success"><div class="big">🎉</div><h2>내보내기 완료</h2></div>
   <div class="done-box"><p style="font-size:14px;line-height:1.7">인트로 답(목적·주인공·청중·톤)이 <code>brandProfile</code>까지 채워 10장면 스토리로 완성됐습니다.<br>회신: 하단 <code>RV 코드</code> 클릭(복사) 한 줄이면 충분합니다.</p></div>
-  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
+  <div class="row"><button class="btn green" data-testid="btn-png" onclick="app.exportPNG()">🖼 이미지 1장 저장(PNG)</button><button class="btn" data-testid="btn-pptx" onclick="app.exportPPTX()">📊 PPT로 저장(.pptx)</button><button class="btn" data-testid="btn-md" onclick="app.exportMD()">📝 전체 문서(.md)</button><button class="btn" data-testid="btn-restart" onclick="app.startFresh();location.reload()">한 번 더(리셋)</button></div>
   <div id="pptx-status" class="sdstatus" style="display:none"></div>
 </section>
 
 </main>
 <footer>
-  <span>v0.7.3 · 편집유도·엔진계측</span>
+  <span>v0.8.0 · 브랜드·순서·히스토리</span>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -274,6 +285,42 @@ var app=(function(){
   var state={goal:null,name:"",desc:"",feats:[],audience:null,tone:"plain",scenes:[],selected:-1,_s6saved:false};
   /* v0.6.1 N3: 로컬 초안 저장(기기 내, 서버 전송 0) */
   var LSKEY="onbo_draft_v1";
+  /* ===== v0.8.0 브랜드 스타일 ===== */
+  var BRANDS=[
+    {k:"default",n:"기본 파랑",a:"#5b8cff",d:"#12141c",l:"#232a40",t:"#8fa6d8",p:"4970CC"},
+    {k:"warm",   n:"따뜻한 주황",a:"#ff8a4c",d:"#1b1410",l:"#3a2418",t:"#e0b394",p:"D9622B"},
+    {k:"calm",   n:"차분한 녹색",a:"#3ecf8e",d:"#0f1714",l:"#1b3128",t:"#8fd3b6",p:"1F8A5B"},
+    {k:"bold",   n:"강렬한 보라",a:"#a06bff",d:"#161022",l:"#2b1c48",t:"#c3a6f0",p:"6D3BC4"}
+  ];
+  function brand(){ return BRANDS.filter(function(b){return b.k===(state.brand||"default");})[0]||BRANDS[0]; }
+  function renderBrandBar(){
+    var bar=document.getElementById("brandbar"); if(!bar) return;
+    bar.innerHTML=BRANDS.map(function(b){
+      return '<button class="swatch'+((state.brand||"default")===b.k?" on":"")+'" data-testid="brand-'+b.k+'" onclick="app.setBrand(\''+b.k+'\')"><i style="background:'+b.a+'"></i>'+b.n+'</button>';
+    }).join("");
+  }
+  /* ===== v0.8.0 작업 히스토리(기기 안에만 저장) ===== */
+  var HKEY="onbo_hist_v1";
+  function histAll(){try{return JSON.parse(localStorage.getItem(HKEY)||"[]");}catch(e){return [];}}
+  function histPush(){
+    try{
+      if(!state.scenes.length) return;
+      var all=histAll().filter(function(h){return h.name!==nm();});
+      all.unshift({name:nm(),desc:ds(),goal:state.goal,audience:state.audience,tone:state.tone,
+        feats:state.feats,scenes:state.scenes,brand:state.brand||"default",ts:Date.now()});
+      localStorage.setItem(HKEY,JSON.stringify(all.slice(0,5)));
+    }catch(e){}
+  }
+  function renderHist(){
+    var box=document.getElementById("histbox"), list=document.getElementById("histlist");
+    if(!box||!list) return;
+    var all=histAll(); if(!all.length){box.style.display="none";return;}
+    box.style.display="block";
+    list.innerHTML=all.map(function(h,i){
+      var d=new Date(h.ts), dt=(d.getMonth()+1)+"/"+d.getDate();
+      return '<div class="histrow"><span>'+esc(h.name)+' · '+h.scenes.length+'장면 · '+dt+'</span><button data-testid="hist-'+i+'" onclick="app.loadHist('+i+')">열기</button></div>';
+    }).join("");
+  }
   function saveDraft(){try{if(!state.scenes.length)return;localStorage.setItem(LSKEY,JSON.stringify({goal:state.goal,name:state.name,desc:state.desc,feats:state.feats,audience:state.audience,tone:state.tone,scenes:state.scenes,ts:Date.now()}));}catch(e){}}
   function loadDraft(){try{var r=localStorage.getItem(LSKEY);return r?JSON.parse(r):null;}catch(e){return null;}}
   function clearDraft(){try{localStorage.removeItem(LSKEY);}catch(e){}}
@@ -595,14 +642,14 @@ var app=(function(){
     var ei=document.getElementById("engine-ind");
     if(ei) ei.textContent = real ? ("엔진: 진짜 AI("+(state._model||"gemini")+")") : "엔진: 스텁(AI 실패→기본문구)";
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
-    renderScenes(); saveDraft();
+    renderScenes(); renderBrandBar(); saveDraft();
     ONBO.step(5,"exit"); /*STEP:5*/
   }
   return {
     kbV:function(e,fn){if(e.key==="Enter"||e.key===" "){e.preventDefault();fn();}},
     kbIdx:function(e,i){if(e.key==="Enter"||e.key===" "){e.preventDefault();app.openEditor(i);}},
     boot:function(){
-      ONBO.step(1,"enter"); /*STEP:1*/ show("scr-intro-goal"); ONBO.step(1,"exit"); /*STEP:1*/
+      ONBO.step(1,"enter"); /*STEP:1*/ show("scr-intro-goal"); ONBO.step(1,"exit"); /*STEP:1*/ try{ renderHist(); }catch(e){}
       ONBO.step(2,"enter"); /*STEP:2*/  // 인트로 시작 = 무엇을 만들까(목적)
       var d=loadDraft(); if(d&&d.scenes&&d.scenes.length===10){var b=document.getElementById("resumebar");if(b){b.style.display="flex";document.getElementById("resume-name").textContent="「"+(d.name||ph(d.goal||"activation")[0])+"」";}}
     },
@@ -620,11 +667,12 @@ var app=(function(){
     /* v0.6.1 N4: 훅 장면 1장 PNG 내보내기 */
     exportPNG:function(){var s=state.scenes[0]||{idx:1,role:"훅",text:nm()};
       var c=document.createElement("canvas");c.width=1080;c.height=1080;var x=c.getContext("2d");
-      var g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,"#12141c");g.addColorStop(1,"#232a40");x.fillStyle=g;x.fillRect(0,0,1080,1080);
-      x.fillStyle="#5b8cff";x.fillRect(90,150,120,12);
-      x.fillStyle="#8fa6d8";x.font="600 36px sans-serif";x.fillText("#"+s.idx+" · "+s.role,90,240);
+      var B=brand();
+      var g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,B.d);g.addColorStop(1,B.l);x.fillStyle=g;x.fillRect(0,0,1080,1080);
+      x.fillStyle=B.a;x.fillRect(90,150,120,12);
+      x.fillStyle=B.t;x.font="600 36px sans-serif";x.fillText("#"+s.idx+" · "+s.role,90,240);
       x.fillStyle="#ffffff";x.font="700 66px sans-serif";x.textBaseline="alphabetic";wrapText(x,s.text,90,360,900,86);
-      x.fillStyle="#6b7fb0";x.font="500 30px sans-serif";x.fillText("온보 스튜디오 · "+nm()+" · 30초 온보딩",90,1010);
+      x.fillStyle=B.t;x.font="500 30px sans-serif";x.fillText("온보 스튜디오 · "+nm()+" · 30초 온보딩",90,1010);
       var a=document.createElement("a");a.href=c.toDataURL("image/png");a.download=(nm()||"onbo")+"_scene1.png";a.click();},
     pickGoal:function(g,el){state.goal=g;ONBO.card("C1_goal",g);if(el)mark("scr-intro-goal",el);
       document.getElementById("in-name").placeholder="예: "+ph(g)[0];document.getElementById("in-desc").placeholder="예: "+ph(g)[1];
@@ -728,6 +776,47 @@ var app=(function(){
       st.innerHTML='✅ <b>'+esc(f.name)+'</b>에서 '+txt.length+'자를 읽었어요. 핵심 요소를 뽑는 중…';
       await app.extract(true);
     },
+    setBrand:function(k){
+      state.brand=k; ONBO.card("brand",k); renderBrandBar(); saveDraft();
+      var st=document.getElementById("cz-status");
+      if(st) st.innerHTML='🎨 브랜드 색을 <b>'+esc(brand().n)+'</b>으로 바꿨어요. 이미지·PPT 저장에 적용됩니다.';
+    },
+    moveScene:function(dir){
+      var i=state.selected; if(i<0) return;
+      var j=i+dir; if(j<0||j>=state.scenes.length) return;
+      app.commitOpenEditor();
+      var a=state.scenes[i]; state.scenes[i]=state.scenes[j]; state.scenes[j]=a;
+      for(var k=0;k<state.scenes.length;k++) state.scenes[k].idx=k+1;
+      state.selected=j; ONBO.card("scene_move",String(dir));
+      document.getElementById("ed-title").textContent="#"+state.scenes[j].idx+" · "+state.scenes[j].role;
+      renderScenes(); saveDraft();
+      var n=document.getElementById("nudge");
+      if(n) n.innerHTML='↕️ 장면 순서를 바꿨어요. 번호는 자동으로 다시 매겨집니다.';
+    },
+    loadHist:function(i){
+      var h=histAll()[i]; if(!h) return;
+      state.name=h.name; state.desc=h.desc; state.goal=h.goal; state.audience=h.audience;
+      state.tone=h.tone; state.feats=h.feats||[]; state.scenes=h.scenes; state.brand=h.brand||"default";
+      ONBO.card("history_load",String(i));
+      ONBO.step(2,"enter"); /*STEP:2*/ ONBO.step(2,"exit"); /*STEP:2*/ ONBO.step(3,"enter"); /*STEP:3*/ ONBO.step(3,"exit"); /*STEP:3*/
+      ONBO.step(4,"enter"); /*STEP:4*/ ONBO.step(4,"exit"); /*STEP:4*/ ONBO.step(5,"enter"); /*STEP:5*/
+      document.getElementById("scenes-title").textContent="「"+h.name+"」 "+h.scenes.length+"장면 스토리";
+      show("scr-scenes"); renderScenes(); renderBrandBar(); ONBO.step(5,"exit");
+    },
+    exportMD:function(){
+      var f=feats(), b=brand();
+      var md="# "+nm()+"\n\n> "+ds()+"\n\n";
+      md+="- 목적: "+(state.goal||"-")+"\n- 대상: "+(state.audience||"-")+"\n- 말투: "+(state.tone==="emotive"?"감성":"담백")+"\n- 브랜드 색: "+b.n+"\n\n";
+      md+="## 핵심 기능\n"+f.map(function(x){return "- "+x;}).join("\n")+"\n\n";
+      md+="## 30초 온보딩 10장면\n\n| # | 역할 | 문구 | 초 |\n|---|---|---|---|\n";
+      (state.scenes||[]).forEach(function(sc){ md+="| "+sc.idx+" | "+sc.role+" | "+String(sc.text).replace(/\|/g,"/")+" | "+(sc.dur||3)+" |\n"; });
+      if(window.__lastFmt&&window.__lastFmt.text) md+="\n## 추가로 만든 형식 ("+window.__lastFmt.key+")\n\n"+window.__lastFmt.text+"\n";
+      md+="\n---\n온보 스튜디오 v"+CONTRACT.version+" · 엔진: "+(state._engine==="gemini"?"진짜 AI":"기본 문구")+"\n";
+      var blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(nm()||"onbo")+"_전체.md";a.click();
+      ONBO.card("export_md","ok");
+      var d=document.getElementById("pptx-status"); if(d){d.style.display="block";d.innerHTML="✅ 전체 내용을 마크다운(.md)으로 저장했어요.";}
+    },
     hubSync:function(){
       var g=function(id){return (document.getElementById(id)||{}).value||"";};
       document.getElementById("in-name").value=g("hub-name");
@@ -761,7 +850,7 @@ var app=(function(){
         title.addText(ds()||"",{x:0.5,y:3.2,w:9,h:0.8,fontSize:16,color:"6B7280"});
         (state.scenes||[]).forEach(function(sc){
           var sl=pres.addSlide();
-          sl.addText("#"+sc.idx+" · "+(sc.role||""),{x:0.5,y:0.45,w:9,h:0.5,fontSize:14,bold:true,color:"4970CC"});
+          sl.addText("#"+sc.idx+" · "+(sc.role||""),{x:0.5,y:0.45,w:9,h:0.5,fontSize:14,bold:true,color:brand().p});
           sl.addText(String(sc.text||""),{x:0.5,y:1.4,w:9,h:3.0,fontSize:26,color:"111827",valign:"top"});
           sl.addText((sc.dur||3)+"초",{x:8.4,y:4.8,w:1.1,h:0.4,fontSize:11,color:"9CA3AF",align:"right"});
         });
@@ -831,6 +920,7 @@ var app=(function(){
           brandProfile:{voice:state.tone,goal:state.goal,audience:state.audience}},
         scenes:state.scenes,totalSec:30,engine:state._engine||"stub",model:state._model||null};
       var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(nm()||"onbo")+"_10scenes.json";a.click();
+      histPush();
       ONBO.step(7,"exit"); /*STEP:7*/ ONBO.step(8,"enter"); /*STEP:8*/ show("scr-done"); ONBO.step(8,"exit"); /*STEP:8*/
     }
   };
