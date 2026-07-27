@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.14.0 (일괄편집·업종가드·진단코드)</title>
+<title>온보 스튜디오 — pre-alpha v0.15.0 (밝은테마·다중초안·장면잠금)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.14.0","steps":[
+{"version":"0.15.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -19,6 +19,17 @@
 </script>
 <style>
   :root{--bg:#0f1117;--panel:#181b24;--panel2:#1f2330;--line:#2a2f3e;--txt:#e8eaf0;--dim:#8a90a3;--acc:#4970cc;--accbright:#5b8cff;--acc2:#7ee0b8;--warn:#ffb054;--green:#24825b;}
+  /* v0.15.0 밝은 테마 — 인쇄·회의실 프로젝터·밝은 사무실 대응 */
+  :root[data-theme="light"]{--bg:#f4f5f8;--panel:#ffffff;--panel2:#eef1f7;--line:#ccd3e0;--txt:#12151c;--dim:#5a6274;--acc:#2a5fb8;--accbright:#1f4fa0;--acc2:#166a4a;--warn:#8a5200;--green:#166a4a;}
+  :root[data-theme="light"] .pcard,:root[data-theme="light"] #rvcode,:root[data-theme="light"] .hist,
+  :root[data-theme="light"] .dropzone,:root[data-theme="light"] #sd-text,:root[data-theme="light"] .fmtout,
+  :root[data-theme="light"] .swatch,:root[data-theme="light"] .fontpick,:root[data-theme="light"] #diagbox,
+  :root[data-theme="light"] .savebar{background:#ffffff;}
+  :root[data-theme="light"] .hub{background:#f2f7ff;}
+  :root[data-theme="light"] .nudge{background:#eaf1ff;}
+  :root[data-theme="light"] .offbar{background:#fff5e6;}
+  :root[data-theme="light"] .scenetools button,:root[data-theme="light"] .bulkbar button,
+  :root[data-theme="light"] .histrow button,:root[data-theme="light"] .editbtn{background:#eef1f7;}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;}
   body{background:var(--bg);color:var(--txt);min-height:100vh;}
@@ -165,7 +176,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.14.0 · 일괄 편집 · 업종별 가드 · 진단 코드 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.15.0 · 밝은 테마 · 다중 초안 · 장면 잠금 · 내부용</span>
 </header>
 <main>
 
@@ -294,10 +305,11 @@
       <label for="ed-dur">길이</label>
       <select id="ed-dur" data-testid="ed-dur"><option value="2">2초</option><option value="3" selected>3초</option><option value="4">4초</option><option value="5">5초</option><option value="7">7초</option></select>
     </div>
-    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-dup" onclick="app.dupScene()">⧉ 이 장면 복제</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
+    <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-dup" onclick="app.dupScene()">⧉ 이 장면 복제</button><button class="btn ghost" data-testid="btn-lock" onclick="app.toggleLock()">🔒 이 장면 잠그기</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
   <div class="savebar" id="savebar" data-testid="savebar" role="status" aria-live="polite"><span id="savemsg">저장 준비 중…</span></div>
   <div id="diagbox" data-testid="diagbox"></div>
+  <div id="expbox" data-testid="expbox" style="display:none;font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.7"></div>
   <div class="sr-only" id="live" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="bulkbar" id="bulkbar" data-testid="bulkbar">
     <span id="bulkcount"></span>
@@ -315,6 +327,8 @@
     <button data-testid="btn-hint" onclick="app.makeHints()">🎨 장면별 그림 힌트</button>
     <button data-testid="btn-preset" onclick="app.applyPreset()">🧩 역할 구성 바꾸기</button>
     <button data-testid="btn-diag" onclick="app.diagCode()">🩺 진단 코드</button>
+    <button data-testid="slot-save" onclick="app.slotSave()">📥 슬롯에 보관</button>
+    <span id="slotbar" style="display:inline-flex;gap:8px;flex-wrap:wrap"></span>
     <button data-testid="btn-share" onclick="app.shareLink()">🔗 공유 링크 복사</button>
     <button data-testid="btn-print" onclick="app.printView()">🖨 인쇄 / PDF로 저장</button>
     <span id="scenecount" style="align-self:center;font-size:12.5px;color:var(--dim)"></span>
@@ -375,7 +389,8 @@
   </div>
 </div>
 <footer>
-  <span>v0.14.0 · 일괄편집·업종가드·진단코드</span>
+  <span>v0.15.0 · 밝은테마·다중초안·장면잠금</span>
+  <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
   <div class="row" style="margin:0"><button data-testid="btn-copylog" onclick="ONBO.copy(this)">로그 복사</button></div>
@@ -425,6 +440,32 @@ var app=(function(){
     {k:"bold",   n:"강렬한 보라",a:"#a06bff",d:"#161022",l:"#2b1c48",t:"#c3a6f0",p:"6D3BC4"}
   ];
   function brand(){ return BRANDS.filter(function(b){return b.k===(state.brand||"default");})[0]||BRANDS[0]; }
+  /* ===== v0.15.0 다중 초안 슬롯(기기 안에만 보관, 최대 3칸) ===== */
+  var SKEY="onbo_slots_v1";
+  function slotAll(){ try{ return JSON.parse(localStorage.getItem(SKEY)||"[]"); }catch(e){ return []; } }
+  function renderSlots(){
+    var b=document.getElementById("slotbar"); if(!b) return;
+    var all=slotAll();
+    b.innerHTML=all.map(function(t,i){
+      return '<button class="fontpick" data-testid="slot-'+i+'" onclick="app.slotLoad('+i+')" title="'+esc(t.name)+' 불러오기">📂 '+esc(t.name)+' ('+t.scenes.length+')</button>';
+    }).join("")+(all.length?'<button class="fontpick" data-testid="slot-clear" onclick="app.slotClear()">🧹 슬롯 비우기</button>':'');
+  }
+  /* ===== v0.15.0 성능 추이(최근 5회) ===== */
+  var PKEY="onbo_perf_v1";
+  function perfPush(rec){
+    try{ var all=JSON.parse(localStorage.getItem(PKEY)||"[]"); all.unshift(rec);
+      localStorage.setItem(PKEY,JSON.stringify(all.slice(0,5))); }catch(e){}
+  }
+  function perfTrend(){ try{ return JSON.parse(localStorage.getItem(PKEY)||"[]"); }catch(e){ return []; } }
+  /* ===== v0.15.0 내보내기 이력 ===== */
+  function expPush(kind){
+    state._exp=state._exp||[];
+    var d=new Date(), hh=("0"+d.getHours()).slice(-2), mm=("0"+d.getMinutes()).slice(-2);
+    state._exp.unshift(kind+" · "+hh+":"+mm);
+    var box=document.getElementById("expbox");
+    if(box){ box.style.display="block";
+      box.innerHTML="📦 <b>이번에 내보낸 것</b>: "+state._exp.slice(0,8).map(esc).join(" / "); }
+  }
   /* ===== v0.13.0 출력 언어 ===== */
   var LANGS=[{k:"ko",n:"한국어",label:"한국어"},{k:"en",n:"English",label:"영어"}];
   function lang(){ return state.lang||"ko"; }
@@ -442,7 +483,11 @@ var app=(function(){
     state._perf=state._perf||{}; state._perf[label]=ms;
     ONBO.card("perf",label+":"+Math.round(ms));
     var e=document.getElementById("perf");
-    if(e) e.textContent="⏱ "+label+" "+(ms/1000).toFixed(1)+"초";
+    if(!e) return;
+    if(label==="생성") perfPush({t:Math.round(ms),n:(state.scenes||[]).length,eng:state._engine||"?"});
+    var tr=perfTrend();
+    var avg=tr.length?Math.round(tr.reduce(function(a,b){return a+b.t;},0)/tr.length/100)/10:null;
+    e.textContent="⏱ "+label+" "+(ms/1000).toFixed(1)+"초"+(avg!==null&&label==="생성"?(" · 최근 "+tr.length+"회 평균 "+avg+"초"):"");
   }
   /* ===== v0.13.0 내 설정 템플릿 ===== */
   var TKEY="onbo_tpl_v1";
@@ -985,6 +1030,7 @@ var app=(function(){
       if(isLong) chips+='<span class="warnchip" data-testid="long-'+s.idx+'">✂️ '+String(s.text).length+'자 — 45자 이내 권장</span>'+
         '<button class="shortbtn" data-testid="short-'+s.idx+'" onclick="event.stopPropagation();app.shorten('+i+')">✂️ 줄이기</button>';
       var hint=s.hint?('<span class="rolehint" data-testid="hint-'+s.idx+'" style="color:var(--acc2)">🎨 '+esc(s.hint)+'</span>'):"";
+      if(s.lock) chips+='<span class="warnchip" data-testid="lock-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">🔒 잠김 — 일괄 변경에서 보호</span>';
       html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+((state._pick&&state._pick[i])?" picked":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><span class="selbox" data-testid="pick-'+s.idx+'" onclick="event.stopPropagation();app.togglePick('+i+')" title="여러 장면 고르기">'+((state._pick&&state._pick[i])?"☑":"☐")+'</span><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}
     state._riskN=riskN;
     var picked=(state._pick||[]).filter(Boolean).length;
@@ -1012,7 +1058,7 @@ var app=(function(){
     if(ei) ei.textContent = real ? ("엔진: 진짜 AI("+(state._model||"gemini")+")") : "엔진: 스텁(AI 실패→기본문구)";
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     var _t1=Date.now();
-    renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); saveDraft();
+    renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); renderSlots(); saveDraft();
     perf("화면 표시",Date.now()-_t1);
     say(state.scenes.length+"개 장면이 만들어졌습니다. 장면을 눌러 고치거나, 내보내기 버튼으로 저장하세요.");
     ONBO.step(5,"exit"); /*STEP:5*/
@@ -1021,7 +1067,8 @@ var app=(function(){
     kbV:function(e,fn){if(e.key==="Enter"||e.key===" "){e.preventDefault();fn();}},
     kbIdx:function(e,i){if(e.key==="Enter"||e.key===" "){e.preventDefault();app.openEditor(i);}},
     boot:function(){
-      ONBO.step(1,"enter"); /*STEP:1*/ show("scr-intro-goal"); ONBO.step(1,"exit"); /*STEP:1*/ try{ renderHist(); renderTpl(); }catch(e){}
+      try{ if(localStorage.getItem("onbo_theme_v1")==="light") document.documentElement.setAttribute("data-theme","light"); }catch(e){}
+      ONBO.step(1,"enter"); /*STEP:1*/ show("scr-intro-goal"); ONBO.step(1,"exit"); /*STEP:1*/ try{ renderHist(); renderTpl(); renderSlots(); }catch(e){}
       ONBO.step(2,"enter"); /*STEP:2*/  // 인트로 시작 = 무엇을 만들까(목적)
       /* v0.11.0 공유 링크로 열린 경우: 결과 화면으로 바로 */
       try{
@@ -1124,8 +1171,11 @@ var app=(function(){
       snapshot("말투 변경"); state.tone=t; ONBO.card("tone_change",t+(langChanged?("+"+lang()):""));
       var st=document.getElementById("cz-status");
       st.innerHTML="🎛 "+(t==="emotive"?"감성":"담백")+" 느낌으로 다시 쓰는 중…";
+      var keep=(state.scenes||[]).map(function(x){ return x.lock?{idx:x.idx,role:x.role,text:x.text,dur:x.dur,hint:x.hint,lock:true}:null; });
       var real=await realEngine(state.goal,nm(),ds(),feats(),state.audience,state.tone);
       state.scenes = real || stubEngine();
+      /* 잠근 장면은 그대로 되돌린다(일괄 변경에서 보호) */
+      keep.forEach(function(k,i){ if(k&&state.scenes[i]) state.scenes[i]=k; });
       state._genLang = lang();
       state._engine = real ? "gemini" : "stub";
       var ei=document.getElementById("engine-ind");
@@ -1141,7 +1191,7 @@ var app=(function(){
       snapshot("이름 바꾸기");
       state.name=nn;
       var inp=document.getElementById("in-name"); if(inp) inp.value=nn;
-      state.scenes=(state.scenes||[]).map(function(s){return {idx:s.idx,role:s.role,dur:s.dur,text:String(s.text).split(cur).join(nn)};});
+      state.scenes=(state.scenes||[]).map(function(s){return s.lock?s:{idx:s.idx,role:s.role,dur:s.dur,hint:s.hint,text:String(s.text).split(cur).join(nn)};});
       document.getElementById("scenes-title").textContent="「"+nn+"」 "+state.scenes.length+"장면 스토리";
       renderScenes(); saveDraft(); ONBO.card("rename_all","1");
       document.getElementById("cz-status").innerHTML="✅ 모든 장면에서 이름을 <b>"+esc(nn)+"</b>(으)로 바꿨어요.";
@@ -1244,6 +1294,63 @@ var app=(function(){
       st.innerHTML='✅ <b>'+esc(f.name)+'</b>에서 '+txt.length+'자를 읽었어요. 핵심 요소를 뽑는 중…';
       await app.extract(true);
     },
+    /* v0.15.0 밝은/어두운 테마 */
+    toggleTheme:function(){
+      var r=document.documentElement;
+      var next=r.getAttribute("data-theme")==="light"?"dark":"light";
+      if(next==="light") r.setAttribute("data-theme","light"); else r.removeAttribute("data-theme");
+      state.theme=next; ONBO.card("theme",next);
+      try{ localStorage.setItem("onbo_theme_v1",next); }catch(e){}
+      say(next==="light"?"밝은 테마로 바꿨습니다":"어두운 테마로 바꿨습니다");
+    },
+    /* v0.15.0 장면 잠금 */
+    toggleLock:function(){
+      var i=state.selected; if(i<0) return;
+      var sc=state.scenes[i]; sc.lock=!sc.lock;
+      ONBO.card("lock",(sc.lock?"on:":"off:")+sc.idx);
+      renderScenes(); saveDraft();
+      var st=document.getElementById("cz-status");
+      if(st) st.innerHTML=sc.lock
+        ? '🔒 '+sc.idx+'번 장면을 <b>잠갔어요</b>. 말투 일괄 변경·이름 일괄 바꾸기에서 이 장면은 그대로 유지됩니다.'
+        : '🔓 '+sc.idx+'번 장면 잠금을 풀었어요.';
+    },
+    /* v0.15.0 초안 슬롯 */
+    slotSave:function(){
+      if(!state.scenes||!state.scenes.length) return;
+      var nn=prompt("이 작업을 어떤 이름으로 보관할까요?", nm());
+      if(!nn) return;
+      var all=slotAll().filter(function(t){return t.name!==nn;});
+      all.unshift({name:nn,goal:state.goal,name2:state.name,desc:state.desc,feats:state.feats,
+        audience:state.audience,tone:state.tone,brand:state.brand||"default",font:state.font||"sans",
+        lang:state.lang||"ko",scenes:state.scenes,ts:Date.now()});
+      try{ localStorage.setItem(SKEY,JSON.stringify(all.slice(0,3))); }catch(e){
+        var s1=document.getElementById("cz-status");
+        if(s1) s1.innerHTML='<span class="warn">기기 저장 공간이 부족해 슬롯에 보관하지 못했어요. <b>[🛟 백업 파일 내려받기]</b>를 쓰세요.</span>'; return;
+      }
+      ONBO.card("slot_save","1"); renderSlots();
+      var st=document.getElementById("cz-status");
+      if(st) st.innerHTML='📥 <b>'+esc(nn)+'</b> 슬롯에 보관했어요(최대 3칸, 이 기기 안에만).';
+    },
+    slotLoad:function(i){
+      var t=slotAll()[i]; if(!t) return;
+      snapshot("슬롯 불러오기");
+      state.goal=t.goal; state.name=t.name2||t.name; state.desc=t.desc; state.feats=t.feats||[];
+      state.audience=t.audience; state.tone=t.tone; state.brand=t.brand||"default";
+      state.font=t.font||"sans"; state.lang=t.lang||"ko"; state.scenes=t.scenes;
+      state.selected=-1; state._pick=[];
+      document.getElementById("editor").style.display="none";
+      document.getElementById("scenes-title").textContent="「"+nm()+"」 "+state.scenes.length+"장면 스토리";
+      ONBO.card("slot_load",String(i));
+      renderScenes(); renderBrandBar(); renderFontBar(); renderLangBar(); applyFont(); saveDraft();
+      say(t.name+" 슬롯을 불러왔습니다");
+      var nb=document.getElementById("nudge");
+      if(nb) nb.innerHTML='📂 <b>'+esc(t.name)+'</b> 슬롯을 불러왔어요. 잘못 눌렀으면 <b>[↩ 되돌리기]</b>.';
+    },
+    slotClear:function(){
+      if(!confirm("보관한 슬롯을 모두 비울까요? (지금 만들고 있는 내용에는 영향 없음)")) return;
+      try{ localStorage.removeItem(SKEY); }catch(e){}
+      ONBO.card("slot_clear","1"); renderSlots();
+    },
     /* v0.14.0 여러 장면 고르기 */
     togglePick:function(i){
       state._pick=state._pick||[]; state._pick[i]=!state._pick[i];
@@ -1314,6 +1421,7 @@ var app=(function(){
       var roles=P2.r, old=state.scenes||[], out=[];
       for(var i=0;i<roles.length;i++){
         var src=old[i];
+        if(src&&src.lock){ out.push({idx:i+1,role:src.role,dur:src.dur||3,text:src.text,hint:src.hint,lock:true}); continue; }
         out.push({idx:i+1,role:roles[i],dur:(src&&src.dur)||3,
           text:(src&&src.text)||"", hint:src&&src.hint});
       }
@@ -1331,7 +1439,10 @@ var app=(function(){
       var code=["ONBO",CONTRACT.version,(state._engine||"stub"),lang(),(state.brand||"default"),(state.font||"sans"),
         sc.length+"sc",(sc.reduce(function(a,b){return a+(b.dur||3);},0))+"s",
         (state._riskN||0)+"risk",(state._saveOk===false?"SAVEFAIL":"saveok"),
-        (navigator.onLine?"on":"off"),ONBO.rv().split("|").slice(1).join("|")].join("|");
+        (navigator.onLine?"on":"off"),
+        ((state.scenes||[]).filter(function(x){return x.lock;}).length)+"lock",
+        (state.theme||"dark"),
+        ONBO.rv().split("|").slice(1).join("|")].join("|");
       var box=document.getElementById("diagbox");
       if(box){ box.style.display="block"; box.textContent=code+"  ← 이 줄을 복사해 보내주시면 상태를 그대로 재현할 수 있어요"; }
       ONBO.card("diag","1");
@@ -1721,7 +1832,7 @@ var app=(function(){
         }
         var blob=await zip.generateAsync({type:"blob"});
         dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_장면이미지.zip",true);
-        ONBO.card("export_png_all","ok");
+        ONBO.card("export_png_all","ok"); expPush("장면 이미지 zip");
         st2("✅ 장면 "+sc.length+"개를 이미지로 만들어 zip으로 저장했어요.");
       }catch(e){
         ONBO.card("export_png_all","fail");
@@ -1749,7 +1860,7 @@ var app=(function(){
         '</body></html>';
       var blob=new Blob(["\ufeff"+html],{type:"application/msword;charset=utf-8"});
       dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_보고서.doc",true);
-      ONBO.card("export_doc","ok");
+      ONBO.card("export_doc","ok"); expPush("워드 문서");
       var d=document.getElementById("pptx-status"); if(d){d.style.display="block";d.innerHTML="✅ 워드에서 열리는 문서(.doc)로 저장했어요. 표 그대로 편집할 수 있습니다.";}
     },
     setBrand:function(k){
@@ -1842,7 +1953,7 @@ var app=(function(){
           n.addText(r[1],{x:3.4,y:1.35+i*0.85,w:6.0,h:0.6,fontSize:13,color:MU});
         });
         await pres.writeFile({fileName:(nm()||"onbo")+"_보고용장표.pptx"});
-        ONBO.card("export_report","ok");
+        ONBO.card("export_report","ok"); expPush("보고용 장표");
         st2("✅ 보고용 장표를 저장했어요. 표지·한장요약·스토리표·다음단계 4장입니다.");
       }catch(e){
         ONBO.card("export_report","fail");
@@ -1861,7 +1972,7 @@ var app=(function(){
       md+="\n---\n온보 스튜디오 v"+CONTRACT.version+" · 엔진: "+(state._engine==="gemini"?"진짜 AI":"기본 문구")+"\n";
       var blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
       dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_전체.md",true);
-      ONBO.card("export_md","ok");
+      ONBO.card("export_md","ok"); expPush("마크다운");
       var d=document.getElementById("pptx-status"); if(d){d.style.display="block";d.innerHTML="✅ 전체 내용을 마크다운(.md)으로 저장했어요.";}
     },
     hubSync:function(){
@@ -1906,7 +2017,7 @@ var app=(function(){
           sl.addText((sc.dur||3)+"초",{x:8.4,y:4.8,w:1.1,h:0.4,fontSize:11,color:"9CA3AF",align:"right"});
         });
         await pres.writeFile({fileName:(nm()||"onbo")+"_10scenes.pptx"});
-        ONBO.card("export_pptx","ok");
+        ONBO.card("export_pptx","ok"); expPush("PPT");
         st2("✅ PPT 파일을 저장했어요.");
       }catch(e){
         ONBO.card("export_pptx","fail");
