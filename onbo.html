@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.15.0 (밝은테마·다중초안·장면잠금)</title>
+<title>온보 스튜디오 — pre-alpha v0.15.1 (AI 부분복구·밝은테마·다중초안)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.15.0","steps":[
+{"version":"0.15.1","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -176,7 +176,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.15.0 · 밝은 테마 · 다중 초안 · 장면 잠금 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.15.1 · AI 부분 복구 · 밝은 테마 · 내부용</span>
 </header>
 <main>
 
@@ -389,7 +389,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.15.0 · 밝은테마·다중초안·장면잠금</span>
+  <span>v0.15.1 · AI부분복구·밝은테마·다중초안</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -698,11 +698,36 @@ var app=(function(){
       "출력은 JSON 배열만: [{\"role\":\"훅\",\"text\":\"...\"}, ...] 정확히 10개. 코드블록·설명 금지, JSON만."
     ].join("\n");
   }
+  /* v0.15.1 부분 복구: 잘린 응답에서도 완전한 {role,text} 조각을 건져낸다 */
+  function salvageScenes(raw){
+    var s=String(raw||"").replace(/```json/gi,"").replace(/```/g,"");
+    var out=[], re=/\{[^{}]*?"role"\s*:\s*"([^"]*)"[^{}]*?"text"\s*:\s*"([^"]*)"[^{}]*?\}/g, m2;
+    while((m2=re.exec(s))){
+      var t=String(m2[2]||"").trim();
+      if(t.length>=3 && !/undefined|null/.test(t)) out.push({role:String(m2[1]||"").trim(),text:t});
+    }
+    return out;
+  }
   function parseScenes(raw){
     try{
       var s=String(raw).replace(/```json/gi,"").replace(/```/g,"");
-      var m=s.match(/\[[\s\S]*\]/); if(!m) return null;
+      var m=s.match(/\[[\s\S]*\]/);
+      if(!m||!(function(){try{var a=JSON.parse(m[0]);return Array.isArray(a)&&a.length>=10;}catch(e){return false;}})()){
+        /* 잘린 응답 구제 경로 */
+        var sal=salvageScenes(raw);
+        if(sal.length>=3){
+          var base=stubEngine(), used=0;
+          for(var k=0;k<10;k++){
+            var slot=sal.filter(function(x){return x.role&&base[k].role&&x.role.indexOf(base[k].role.replace("(CTA)",""))===0;})[0]||sal[k];
+            if(slot&&slot.text){ base[k]={idx:k+1,role:base[k].role,text:slot.text,dur:3}; used++; }
+          }
+          state._salvaged=used;
+          return base;
+        }
+        return null;
+      }
       var arr=JSON.parse(m[0]); if(!Array.isArray(arr)||arr.length<10) return null;
+      state._salvaged=0;
       var out=[];
       for(var i=0;i<10;i++){
         var t=String((arr[i]&&arr[i].text)||"").trim();
@@ -1053,9 +1078,11 @@ var app=(function(){
     state.scenes = real || stubEngine();
     state._genLang = lang();
     state._engine = real ? "gemini" : "stub";
-    ONBO.card("engine", real ? ("gemini:"+(state._model||"?")) : "stub");
+    ONBO.card("engine", real ? ("gemini:"+(state._model||"?")+(state._salvaged?(":partial"+state._salvaged):"")) : "stub");
     var ei=document.getElementById("engine-ind");
-    if(ei) ei.textContent = real ? ("엔진: 진짜 AI("+(state._model||"gemini")+")") : "엔진: 스텁(AI 실패→기본문구)";
+    if(ei) ei.textContent = real
+      ? (state._salvaged ? ("엔진: 진짜 AI 일부 복구 "+state._salvaged+"/10 (서버 응답이 잘림)") : ("엔진: 진짜 AI("+(state._model||"gemini")+")"))
+      : "엔진: 스텁(AI 실패→기본문구)";
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     var _t1=Date.now();
     renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); renderSlots(); saveDraft();
