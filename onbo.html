@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.15.1 (AI 부분복구·밝은테마·다중초안)</title>
+<title>온보 스튜디오 — pre-alpha v0.16.0 (실AI 복구·짧은 프롬프트·재시도)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.15.1","steps":[
+{"version":"0.16.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -176,7 +176,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.15.1 · AI 부분 복구 · 밝은 테마 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.16.0 · 진짜 AI 복구 · 자동 재시도 · 내부용</span>
 </header>
 <main>
 
@@ -389,7 +389,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.15.1 · AI부분복구·밝은테마·다중초안</span>
+  <span>v0.16.0 · 실AI복구·짧은프롬프트·재시도</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -672,6 +672,20 @@ var app=(function(){
   /* ===== v0.6.1 진짜 AI 엔진 (중계 서버 경유) ===== */
   var PROXY_URL="https://onbo-llm.hanksleekorea.workers.dev";
   var ROLE_SLOTS=["훅","문제","해결","기능①","기능②","기능③","신뢰","권한","첫 행동","시작(CTA)"];
+  var ROLE_SLOTS_EN=["Hook","Problem","Solution","Feature1","Feature2","Feature3","Trust","Permission","FirstAction","Start"];
+  /* v0.16.0 압축 프롬프트 — 서버 출력 잘림을 유발하지 않는 최소 길이 */
+  function buildPromptShort(goal,name,desc,feats,audience,tone){
+    if(isEN()){
+      return 'Write a 10-scene app onboarding story. Roles in order: '+ROLE_SLOTS_EN.join(',')+
+        '. App: '+name+' - '+desc+'. Each text 1 short English sentence, max 80 chars. Include the app name in scene 1 and 10. No invented numbers or awards.'+
+        ' Output JSON array only: [{"role":"Hook","text":"..."}] exactly 10.';
+    }
+    return '10장면 앱 온보딩 문구를 써라. 역할 순서: '+ROLE_SLOTS.join(",")+
+      '. 앱: '+name+' - '+desc+(feats&&feats.length?(' / 기능: '+feats.slice(0,3).join(",")):'')+
+      '. 각 문구 한국어 1문장 15~55자, 1번과 10번에 앱 이름 포함, 미확인 수치·수상 금지'+
+      (tone==="emotive"?', 감성적으로':', 담백하게')+
+      '. 출력은 JSON 배열만: [{"role":"훅","text":"..."}] 정확히 10개.';
+  }
   function buildPrompt(goal,name,desc,feats,audience,tone){
     if(isEN()){
       return [
@@ -738,19 +752,31 @@ var app=(function(){
       return out;
     }catch(e){return null;}
   }
-  async function realEngine(goal,name,desc,feats,audience,tone){
-    var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort();},20000);
+  async function askOnce(prompt){
+    var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort();},25000);
     try{
       var res=await fetch(PROXY_URL,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({prompt:buildPrompt(goal,name,desc,feats,audience,tone)}),signal:ctrl.signal});
+        body:JSON.stringify({prompt:prompt}),signal:ctrl.signal});
       clearTimeout(to);
       if(!res.ok) return null;
       var data=await res.json();
-      if(!data.ok||!data.text) return null;
-      var scenes=parseScenes(data.text);
-      if(scenes){ state._model=data.model||"gemini"; }
-      return scenes;
+      return (data&&data.ok&&data.text)?data:null;
     }catch(e){clearTimeout(to);return null;}
+  }
+  /* v0.16.0 실측 근거: 같은 서버라도 프롬프트가 길면 출력이 잘린다(긴 프롬프트 161자 잘림 vs 짧은 프롬프트 775~864자 완전, 3/3).
+     → 짧은 프롬프트를 먼저 쓰고, 그래도 실패하면 더 줄여 1회 재시도한다. */
+  async function realEngine(goal,name,desc,feats,audience,tone){
+    state._salvaged=0; state._retried=0;
+    var d1=await askOnce(buildPromptShort(goal,name,desc,feats,audience,tone));
+    if(d1){ var s1=parseScenes(d1.text); if(s1){ state._model=d1.model||"gemini"; return s1; } }
+    /* 재시도: 역할 목록만 남긴 최소 프롬프트 */
+    state._retried=1;
+    var mini=isEN()
+      ? ('10 onboarding lines for "'+name+'" ('+desc+'). JSON only: [{"role":"Hook","text":""}] exactly 10, roles: '+ROLE_SLOTS_EN.join(","))
+      : ('"'+name+'"('+desc+') 온보딩 10문구. JSON만: [{"role":"훅","text":""}] 정확히 10개, 역할: '+ROLE_SLOTS.join(","));
+    var d2=await askOnce(mini);
+    if(d2){ var s2=parseScenes(d2.text); if(s2){ state._model=(d2.model||"gemini")+"+retry"; return s2; } }
+    return null;
   }
   function drawStrip(){var s=document.getElementById("strip");if(!s)return;_goal=state.goal||"activation";var sc=stubEngine();var pick=[0,3,9],h="";for(var j=0;j<3;j++){var x=sc[pick[j]];h+='<div class="pcard flash"><div class="pn">#'+(pick[j]+1)+'</div><div class="pr">'+x.role+'</div><p>'+esc(x.text)+'</p></div>';}s.innerHTML=h;}
   /* ===== v0.6.1 소스드롭: 붙여넣은 문서에서 AI가 추출(StoryIR-lite) ===== */
@@ -1081,7 +1107,7 @@ var app=(function(){
     ONBO.card("engine", real ? ("gemini:"+(state._model||"?")+(state._salvaged?(":partial"+state._salvaged):"")) : "stub");
     var ei=document.getElementById("engine-ind");
     if(ei) ei.textContent = real
-      ? (state._salvaged ? ("엔진: 진짜 AI 일부 복구 "+state._salvaged+"/10 (서버 응답이 잘림)") : ("엔진: 진짜 AI("+(state._model||"gemini")+")"))
+      ? (state._salvaged ? ("엔진: 진짜 AI 일부 복구 "+state._salvaged+"/10 (서버 응답이 잘림)") : ("엔진: 진짜 AI("+(state._model||"gemini")+")"+(state._retried?" · 재시도로 성공":"")))
       : "엔진: 스텁(AI 실패→기본문구)";
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     var _t1=Date.now();
