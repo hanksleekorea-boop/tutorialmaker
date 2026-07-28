@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.22.0 (키보드 재정렬·이력 되돌리기·마커 CSV·결정 기록·순서 자가검사)</title>
+<title>스토리보더 — pre-alpha v0.23.0 (제품명 통일)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.22.0","steps":[
+{"version":"0.23.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -225,8 +225,8 @@
 </head>
 <body>
 <header>
-  <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.22.0 · 키보드 재정렬 · 이력 되돌리기 · 마커 CSV · 순서 자가검사 · 내부용</span>
+  <h1>스토리<span>보더</span></h1>
+  <span class="badge">PRE-ALPHA v0.23.0 · 이야기 엔진 · 내부용</span>
 </header>
 <main>
 
@@ -472,7 +472,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.22.0 · 키보드 재정렬·이력 되돌리기·마커 CSV·결정 기록</span>
+  <span>스토리보더 v0.23.0 · 이야기 엔진</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -771,7 +771,7 @@ var app=(function(){
       storyboardIR:IR_VERSION,
       id:"sb_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7),
       createdAt:new Date().toISOString(),
-      generator:{app:"onbo-studio",appVersion:CONTRACT.version,engine:state._engine||"stub",model:state._model||null,
+      generator:{app:"storyboarder",appVersion:CONTRACT.version,engine:state._engine||"stub",model:state._model||null,
         partialRecovered:state._salvaged||0,retried:!!state._retried},
       intent:{goal:state.goal||null,audience:state.audience||null,tone:state.tone||"plain",lang:state.lang||"ko"},
       subject:{name:nm(),description:ds(),features:(state.feats||[]).slice()},
@@ -803,8 +803,9 @@ var app=(function(){
     if(!o||typeof o!=="object"){ return {ok:false,errors:["파일 내용이 JSON 객체가 아닙니다."],warnings:[],kind:null}; }
     var kind=null;
     if(o.storyboardIR) kind="ir";
-    else if(o.app==="onbo-studio"&&Array.isArray(o.scenes)) kind="legacy";
-    else return {ok:false,errors:["스토리보드 파일이 아닙니다. storyboardIR 또는 온보 스튜디오 내보내기 파일이어야 합니다."],warnings:[],kind:null};
+    /* v0.23.0 제품명 통일. 예전 파일(onbo-studio)도 계속 읽는다 — 사용자가 저장해 둔 파일을 못 쓰게 만들지 않는다. */
+    else if((o.app==="storyboarder"||o.app==="onbo-studio")&&Array.isArray(o.scenes)) kind="legacy";
+    else return {ok:false,errors:["스토리보드 파일이 아닙니다. storyboardIR 또는 스토리보더 내보내기 파일이어야 합니다."],warnings:[],kind:null};
     if(kind==="ir"){
       var maj=String(o.storyboardIR).split(".")[0];
       if(maj!=="1") err.push("규격 버전 "+o.storyboardIR+" 은(는) 이 앱이 아직 읽지 못합니다(지원: 1.x).");
@@ -824,7 +825,7 @@ var app=(function(){
       }
     } else {
       if(!o.scenes.length) err.push("scenes 배열이 비어 있습니다.");
-      warn.push("예전 형식(온보 내보내기)입니다. 읽을 수 있지만 표준 리소스 정보 일부는 비어 있습니다.");
+      warn.push("예전 형식(스토리보더 이전 버전 내보내기)입니다. 읽을 수 있지만 표준 리소스 정보 일부는 비어 있습니다.");
     }
     return {ok:err.length===0,errors:err,warnings:warn,kind:kind};
   }
@@ -1544,8 +1545,8 @@ var app=(function(){
       var FF=font().png;
       x.fillStyle=B.t;x.font="600 36px "+FF;x.fillText("#"+s.idx+" · "+s.role,90,240);
       x.fillStyle="#ffffff";x.font="700 66px "+FF;x.textBaseline="alphabetic";wrapText(x,s.text,90,360,900,86);
-      x.fillStyle=B.t;x.font="500 30px "+FF;x.fillText("온보 스튜디오 · "+nm()+" · 온보딩",90,1010);
-      dlFile(c.toDataURL("image/png"),(nm()||"onbo")+"_scene1.png",false);},
+      x.fillStyle=B.t;x.font="500 30px "+FF;x.fillText("스토리보더 · "+nm()+" · 온보딩",90,1010);
+      dlFile(c.toDataURL("image/png"),(nm()||"storyboarder")+"_scene1.png",false);},
     pickGoal:function(g,el){state.goal=g;ONBO.card("C1_goal",g);if(el)mark("scr-intro-goal",el);
       document.getElementById("in-name").placeholder="예: "+ph(g)[0];document.getElementById("in-desc").placeholder="예: "+ph(g)[1];
       ONBO.step(2,"exit"); /*STEP:2*/ ONBO.step(3,"enter"); /*STEP:3*/
@@ -1636,7 +1637,7 @@ var app=(function(){
       document.getElementById("cz-status").innerHTML="✅ 모든 장면에서 이름을 <b>"+esc(nn)+"</b>(으)로 바꿨어요.";
     },
     copyFmt:function(btn){var t=(window.__lastFmt||{}).text||"";function ok(){if(btn){btn.textContent="복사됨✓";setTimeout(function(){btn.textContent="📋 복사";},1500);}}if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,ok);else ok();},
-    downloadFmt:function(){var f=window.__lastFmt||{text:"",key:"out"};var blob=new Blob([f.text],{type:"text/plain;charset=utf-8"});dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_"+f.key+".txt",true);},
+    downloadFmt:function(){var f=window.__lastFmt||{text:"",key:"out"};var blob=new Blob([f.text],{type:"text/plain;charset=utf-8"});dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_"+f.key+".txt",true);},
     /* v0.6.1 소스드롭 */
     sdMode:function(m){
       var isPaste=(m==="paste"), isFile=(m==="file"), isYT=(m==="yt"), isST=(m==="store");
@@ -2003,7 +2004,7 @@ var app=(function(){
         t+=d;
       });
       var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+".srt",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+".srt",true);
       ONBO.card("export_srt",String(ir.scenes.length));
       var b=document.getElementById("irbox");
       if(b){ b.classList.add("on");
@@ -2038,7 +2039,7 @@ var app=(function(){
       if(ir.generator.partialRecovered) L.push("- ⚠️ 생성 당시 AI 응답이 잘려 **"+ir.generator.partialRecovered+"개 장면만 복구**되었습니다. 나머지는 기본 문구일 수 있습니다.");
       L.push("- 화면 칸이 비어 있으면 스토리보더에서 [🎨 장면별 그림 힌트]를 눌러 채울 수 있습니다.");
       var blob=new Blob(["\ufeff"+L.join("\n")],{type:"text/markdown;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_촬영대본.md",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_촬영대본.md",true);
       ONBO.card("export_script",String(ir.scenes.length));
       var b=document.getElementById("irbox");
       if(b){ b.classList.add("on");
@@ -2082,7 +2083,7 @@ var app=(function(){
         t+=d;
       });
       var blob=new Blob(["\ufeff"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_마커.csv",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_마커.csv",true);
       ONBO.card("export_markers",String(ir.scenes.length));
       var b=document.getElementById("irbox");
       if(b){ b.classList.add("on");
@@ -2139,7 +2140,7 @@ var app=(function(){
     /* v0.14.0 진단 코드 — 문제 신고용 한 줄 */
     diagCode:function(){
       var sc=state.scenes||[];
-      var code=["ONBO",CONTRACT.version,(state._engine||"stub"),lang(),(state.brand||"default"),(state.font||"sans"),
+      var code=["SBDR",CONTRACT.version,(state._engine||"stub"),lang(),(state.brand||"default"),(state.font||"sans"),
         sc.length+"sc",(sc.reduce(function(a,b){return a+(b.dur||3);},0))+"s",
         (state._riskN||0)+"risk",(state._saveOk===false?"SAVEFAIL":"saveok"),
         (navigator.onLine?"on":"off"),
@@ -2157,7 +2158,8 @@ var app=(function(){
           '<div style="margin-top:10px;font-weight:700;color:var(--txt)" data-testid="order-verdict">화면 순서 자가검사: '+
             (oc.verdict==="PASS"?'<span style="color:var(--acc2)">이상 없음</span>':oc.verdict==="FAIL"?'<span class="warn">순서가 어긋났어요</span>':'<span style="color:var(--dim)">아직 판정할 수 없어요</span>')+'</div>'+
           '<div style="margin-top:5px;font-size:12px;line-height:1.9" data-testid="order-detail">'+lines.map(esc).join("<br>")+'</div>'+
-          '<div style="margin-top:6px;color:var(--dim);font-size:11.5px">이상 없음은 <b>이번 실행의 화면 순서가 맞다</b>는 뜻일 뿐, 결과 품질이 좋다는 뜻은 아닙니다.</div>';
+          '<div style="margin-top:6px;color:var(--dim);font-size:11.5px">이상 없음은 <b>이번 실행의 화면 순서가 맞다</b>는 뜻일 뿐, 결과 품질이 좋다는 뜻은 아닙니다.</div>'+
+          '<div style="margin-top:8px;color:var(--dim);font-size:11.5px" data-testid="naming-note">ℹ️ 제품 이름은 <b>스토리보더</b>로 통일했지만, <b>주소(onbo.html)와 이 기기에 저장된 초안·기록은 예전 이름을 그대로 씁니다</b> — 이미 공유한 링크와 저장해 둔 작업물을 잃지 않기 위해서예요.</div>';
       }
       ONBO.card("diag","1");
       /* F-25: writeText는 비동기 거부라 try/catch로 안 잡힌다 → 반드시 .catch 를 단다 */
@@ -2237,7 +2239,7 @@ var app=(function(){
         if(nb) nb.innerHTML='🛟 <b>백업 파일에서 복원했어요.</b> 여기서 바로 이어서 고치거나 저장할 수 있습니다.';
       }catch(e){
         ONBO.card("restore","fail");
-        if(st) st.innerHTML='<span style="color:var(--warn)">이 파일은 온보 백업 파일이 아닌 것 같아요('+esc(String(e&&e.message||e))+').</span>';
+        if(st) st.innerHTML='<span style="color:var(--warn)">이 파일은 스토리보더 백업 파일이 아닌 것 같아요('+esc(String(e&&e.message||e))+').</span>';
       }
     },
     /* v0.13.0 최근 작업 검색 */
@@ -2256,17 +2258,17 @@ var app=(function(){
         '<head><meta charset="utf-8"><title>'+esc(nm())+' '+esc(f.key)+'</title>'+
         '<style>body{font-family:"'+FF+'",sans-serif;font-size:11pt;color:#1a1a1a;} h1{font-size:18pt;color:#'+B.p+';} pre{white-space:pre-wrap;font-family:"'+FF+'",sans-serif;font-size:11pt;}</style></head><body>'+
         '<h1>'+esc(nm())+' — '+esc(f.key)+'</h1><pre>'+esc(f.text)+'</pre>'+
-        '<p style="color:#7a7a7a;font-size:9pt">온보 스튜디오 v'+CONTRACT.version+'</p></body></html>';
+        '<p style="color:#7a7a7a;font-size:9pt">스토리보더 v'+CONTRACT.version+'</p></body></html>';
       var blob=new Blob(["\ufeff"+html],{type:"application/msword;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_"+f.key+".doc",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_"+f.key+".doc",true);
       ONBO.card("export_fmt_doc",f.key);
     },
     /* v0.14.0 형식 결과 → 마크다운 */
     exportFmtMD:function(){
       var f=window.__lastFmt||{text:"",key:"out"};
-      var md="# "+nm()+" — "+f.key+"\n\n> "+ds()+"\n\n"+f.text+"\n\n---\n온보 스튜디오 v"+CONTRACT.version+"\n";
+      var md="# "+nm()+" — "+f.key+"\n\n> "+ds()+"\n\n"+f.text+"\n\n---\n스토리보더 v"+CONTRACT.version+"\n";
       var blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_"+f.key+".md",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_"+f.key+".md",true);
       ONBO.card("export_fmt_md",f.key);
     },
     /* v0.13.0 형식 결과 → PPT */
@@ -2286,7 +2288,7 @@ var app=(function(){
           sl.addText(head.slice(0,60),{x:0.6,y:0.5,w:8.8,h:0.7,fontSize:22,bold:true,color:"1F2937",fontFace:FF});
           sl.addText(body||head,{x:0.6,y:1.4,w:8.8,h:3.4,fontSize:16,color:"374151",valign:"top",fontFace:FF});
         });
-        await pres.writeFile({fileName:(nm()||"onbo")+"_"+f.key+".pptx"});
+        await pres.writeFile({fileName:(nm()||"storyboarder")+"_"+f.key+".pptx"});
         ONBO.card("export_fmt_ppt","ok");
       }catch(e){
         ONBO.card("export_fmt_ppt","fail");
@@ -2311,7 +2313,7 @@ var app=(function(){
           zip.file(("0"+(i+1)).slice(-2)+"_card.png",cv.toDataURL("image/png").split(",")[1],{base64:true});
         });
         var blob=await zip.generateAsync({type:"blob"});
-        dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_카드뉴스.zip",true);
+        dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_카드뉴스.zip",true);
         ONBO.card("export_cards","ok");
       }catch(e){
         ONBO.card("export_cards","fail");
@@ -2388,9 +2390,9 @@ var app=(function(){
     /* v0.12.0 긴급 백업 내려받기 — 저장 실패 시 복구 경로 */
     backupNow:function(){
       try{
-        var payload={app:"onbo-studio",kind:"backup",version:CONTRACT.version,savedAt:new Date().toISOString(),draft:draftPayload()};
+        var payload={app:"storyboarder",kind:"backup",version:CONTRACT.version,savedAt:new Date().toISOString(),draft:draftPayload()};
         var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-        dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_백업.json",true);
+        dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_백업.json",true);
         ONBO.card("backup","ok");
         var m=document.getElementById("savemsg");
         if(m) m.innerHTML+=' <span style="color:var(--acc2)">— 백업 파일을 내려받았습니다.</span>';
@@ -2420,7 +2422,7 @@ var app=(function(){
       var t=document.getElementById("print-title"), sub=document.getElementById("print-sub");
       var tot=(state.scenes||[]).reduce(function(a,b){return a+(b.dur||3);},0);
       if(t) t.textContent=nm()+" — 온보딩 스토리";
-      if(sub) sub.textContent=ds()+" · 총 "+(state.scenes||[]).length+"장면 · 약 "+tot+"초 · 온보 스튜디오 v"+CONTRACT.version;
+      if(sub) sub.textContent=ds()+" · 총 "+(state.scenes||[]).length+"장면 · 약 "+tot+"초 · 스토리보더 v"+CONTRACT.version;
       ONBO.card("print","1");
       setTimeout(function(){ try{window.print();}catch(e){} },80);
     },
@@ -2540,12 +2542,12 @@ var app=(function(){
           x.fillStyle=B.a;x.fillRect(90,150,120,12);
           x.fillStyle=B.t;x.font="600 36px "+FF;x.fillText("#"+s3.idx+" · "+(s3.role||""),90,240);
           x.fillStyle="#ffffff";x.font="700 62px "+FF;x.textBaseline="alphabetic";wrapText(x,s3.text||"",90,360,900,82);
-          x.fillStyle=B.t;x.font="500 30px "+FF;x.fillText("온보 스튜디오 · "+nm(),90,1010);
+          x.fillStyle=B.t;x.font="500 30px "+FF;x.fillText("스토리보더 · "+nm(),90,1010);
           var b64=c.toDataURL("image/png").split(",")[1];
           zip.file(("0"+(i+1)).slice(-2)+"_"+(s3.role||"scene").replace(/[^0-9A-Za-z가-힣]/g,"")+".png",b64,{base64:true});
         }
         var blob=await zip.generateAsync({type:"blob"});
-        dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_장면이미지.zip",true);
+        dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_장면이미지.zip",true);
         ONBO.card("export_png_all","ok"); expPush("장면 이미지 zip");
         st2("✅ 장면 "+sc.length+"개를 이미지로 만들어 zip으로 저장했어요.");
       }catch(e){
@@ -2571,10 +2573,10 @@ var app=(function(){
         '<h2>온보딩 스토리 구성</h2><table><tr><th style="width:6%">#</th><th style="width:14%">역할</th><th>문구</th>'+(anyHint?'<th style="width:22%">그림 힌트</th>':'')+'<th style="width:7%">초</th></tr>'+rows+'</table>'+
         extra+
         '<h2>다음 단계</h2><ol><li>이해관계자 검토 후 장면별 문구 확정</li><li>장면표 그대로 제작 또는 외주 전달</li><li>노출 위치 결정(앱 첫 실행·스토어·SNS)</li><li>완주율·이탈 지점 측정 후 문구 재조정</li></ol>'+
-        '<p style="color:#7a7a7a;font-size:9pt;margin-top:20pt">온보 스튜디오 v'+CONTRACT.version+' · 엔진: '+(state._engine==="gemini"?"진짜 AI":"기본 문구")+'</p>'+
+        '<p style="color:#7a7a7a;font-size:9pt;margin-top:20pt">스토리보더 v'+CONTRACT.version+' · 엔진: '+(state._engine==="gemini"?"진짜 AI":"기본 문구")+'</p>'+
         '</body></html>';
       var blob=new Blob(["\ufeff"+html],{type:"application/msword;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_보고서.doc",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_보고서.doc",true);
       ONBO.card("export_doc","ok"); expPush("워드 문서");
       var d=document.getElementById("pptx-status"); if(d){d.style.display="block";d.innerHTML="✅ 워드에서 열리는 문서(.doc)로 저장했어요. 표 그대로 편집할 수 있습니다.";}
     },
@@ -2657,13 +2659,13 @@ var app=(function(){
       app.commitOpenEditor();
       var ir=buildIR();
       var blob=new Blob([JSON.stringify(ir,null,2)],{type:"application/json"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+".storyboard.json",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+".storyboard.json",true);
       ONBO.card("export_ir",String(ir.scenes.length));
       var b=document.getElementById("irbox");
       if(b){ b.classList.add("on");
         b.innerHTML='📦 <b>표준 리소스 파일을 저장했어요.</b><div style="margin-top:6px">'+
-          '파일 이름: <b>'+esc((nm()||"onbo")+".storyboard.json")+'</b> · 장면 '+ir.scenes.length+'개 · 규격 StoryboardIR '+IR_VERSION+' · 확인코드 '+ir.checksum+'</div>'+
-          '<div style="margin-top:6px;color:var(--dim)">이 파일은 온보 전용이 아니라 <b>다른 편집 도구·영상 제작자에게 그대로 넘길 수 있는 자료</b>입니다. 여기 앱에서 다시 열려면 [📥 표준 리소스 가져오기]를 쓰세요.</div>'; }
+          '파일 이름: <b>'+esc((nm()||"storyboarder")+".storyboard.json")+'</b> · 장면 '+ir.scenes.length+'개 · 규격 StoryboardIR '+IR_VERSION+' · 확인코드 '+ir.checksum+'</div>'+
+          '<div style="margin-top:6px;color:var(--dim)">이 파일은 스토리보더 전용이 아니라 <b>다른 편집 도구·영상 제작자에게 그대로 넘길 수 있는 자료</b>입니다. 여기 앱에서 다시 열려면 [📥 표준 리소스 가져오기]를 쓰세요.</div>'; }
       say("표준 리소스 파일을 저장했습니다.");
     },
     importIR:function(){
@@ -2694,7 +2696,7 @@ var app=(function(){
         saveDraft();
         ONBO.card("import_ir",(v.kind||"?")+":"+state.scenes.length);
         if(b) b.innerHTML='📥 <b>'+state.scenes.length+'개 장면을 가져왔어요.</b>'+
-          '<div style="margin-top:6px;color:var(--dim)">형식: '+(v.kind==="ir"?("StoryboardIR "+esc(String(o.storyboardIR))):"예전 온보 내보내기 파일")+'</div>'+
+          '<div style="margin-top:6px;color:var(--dim)">형식: '+(v.kind==="ir"?("StoryboardIR "+esc(String(o.storyboardIR))):"스토리보더 이전 버전 내보내기 파일")+'</div>'+
           (v.warnings.length?('<div style="margin-top:6px;color:var(--warn)">확인해 주세요 — '+v.warnings.map(esc).join("<br>")+'</div>'):'')+
           '<div style="margin-top:6px;color:var(--dim)">잘못 가져왔다면 <b>[↩ 되돌리기]</b>로 직전 상태로 돌아갑니다.</div>';
         say(state.scenes.length+"개 장면을 가져왔습니다.");
@@ -2804,7 +2806,7 @@ var app=(function(){
           n.addText(r[0],{x:0.7,y:1.35+i*0.85,w:2.6,h:0.4,fontSize:15,bold:true,color:AC});
           n.addText(r[1],{x:3.4,y:1.35+i*0.85,w:6.0,h:0.6,fontSize:13,color:MU});
         });
-        await pres.writeFile({fileName:(nm()||"onbo")+"_보고용장표.pptx"});
+        await pres.writeFile({fileName:(nm()||"storyboarder")+"_보고용장표.pptx"});
         ONBO.card("export_report","ok"); expPush("보고용 장표");
         st2("✅ 보고용 장표를 저장했어요. 표지·한장요약·스토리표·다음단계 4장입니다.");
       }catch(e){
@@ -2822,9 +2824,9 @@ var app=(function(){
       md+="## 온보딩 "+(state.scenes||[]).length+"장면\n\n| # | 역할 | 문구 |"+(ah?" 그림 힌트 |":"")+" 초 |\n|---|---|---|"+(ah?"---|":"")+"---|\n";
       (state.scenes||[]).forEach(function(sc){ md+="| "+sc.idx+" | "+sc.role+" | "+String(sc.text).replace(/\|/g,"/")+" |"+(ah?(" "+String(sc.hint||"").replace(/\|/g,"/")+" |"):"")+" "+(sc.dur||3)+" |\n"; });
       if(window.__lastFmt&&window.__lastFmt.text) md+="\n## 추가로 만든 형식 ("+window.__lastFmt.key+")\n\n"+window.__lastFmt.text+"\n";
-      md+="\n---\n온보 스튜디오 v"+CONTRACT.version+" · 엔진: "+(state._engine==="gemini"?"진짜 AI":"기본 문구")+"\n";
+      md+="\n---\n스토리보더 v"+CONTRACT.version+" · 엔진: "+(state._engine==="gemini"?"진짜 AI":"기본 문구")+"\n";
       var blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_전체.md",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_전체.md",true);
       ONBO.card("export_md","ok"); expPush("마크다운");
       var d=document.getElementById("pptx-status"); if(d){d.style.display="block";d.innerHTML="✅ 전체 내용을 마크다운(.md)으로 저장했어요.";}
     },
@@ -2870,7 +2872,7 @@ var app=(function(){
           sl.addText(String(sc.text||""),{x:0.5,y:1.4,w:9,h:3.0,fontSize:26,color:"111827",valign:"top",fontFace:FF});
           sl.addText((sc.dur||3)+"초",{x:8.4,y:4.8,w:1.1,h:0.4,fontSize:11,color:"9CA3AF",align:"right"});
         });
-        await pres.writeFile({fileName:(nm()||"onbo")+"_10scenes.pptx"});
+        await pres.writeFile({fileName:(nm()||"storyboarder")+"_10scenes.pptx"});
         ONBO.card("export_pptx","ok"); expPush("PPT");
         st2("✅ PPT 파일을 저장했어요.");
       }catch(e){
@@ -2954,14 +2956,14 @@ var app=(function(){
       }
       app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.6.1: 편집 자동저장(유실 방지) */
       ONBO.step(7,"enter"); /*STEP:7*/
-      var payload={app:"onbo-studio",version:CONTRACT.version+"-prealpha",vertical:"app",contentMode:state.tone==="emotive"?"b":"a",
+      var payload={app:"storyboarder",version:CONTRACT.version+"-prealpha",vertical:"app",contentMode:state.tone==="emotive"?"b":"a",
         source:{type:"app",inputMode:(state.ir?"paste":"manual"),raw:{name:nm(),desc:ds(),feats:state.feats},meta:{goal:state.goal,audience:state.audience,extraction:(state.ir?state.ir.source:null)},
           brandProfile:{voice:state.tone,goal:state.goal,audience:state.audience}},
         scenes:state.scenes,totalSec:(state.scenes||[]).reduce(function(a,b){return a+(b.dur||3);},0),
         style:{brand:state.brand||"default",font:state.font||"sans",lang:state.lang||"ko"},
         engine:state._engine||"stub",model:state._model||null};
       var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_"+(state.scenes||[]).length+"scenes.json",true);
+      dlFile(URL.createObjectURL(blob),(nm()||"storyboarder")+"_"+(state.scenes||[]).length+"scenes.json",true);
       histPush();
       ONBO.step(7,"exit"); /*STEP:7*/ ONBO.step(8,"enter"); /*STEP:8*/ show("scr-done"); ONBO.step(8,"exit"); /*STEP:8*/
     }
