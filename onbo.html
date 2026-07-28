@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.18.0 (카드 강화·약화·변환 = 이야기 엔진 2단계)</title>
+<title>온보 스튜디오 — pre-alpha v0.19.0 (생성 중 오조작 차단·복원 표식)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.18.0","steps":[
+{"version":"0.19.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -154,6 +154,9 @@
   .bulkbar button{min-height:44px;padding:0 13px;border-radius:8px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12.5px;cursor:pointer;}
   .bulkbar button.danger{color:#ff8c8c;border-color:#4a2a2a;}
   .shortbtn{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--warn);background:#241c11;color:#ffd9a8;font-size:12px;cursor:pointer;margin-left:8px;}
+  .busy .btn,.busy .fmttile,.busy .scenetools button,.busy .bulkbar button,.busy .cardops button,.busy .swatch,.busy .fontpick{opacity:.45;pointer-events:none;}
+  .busybar{display:none;align-items:center;gap:10px;background:#151a24;border:1px solid var(--accbright);color:#cdd9f2;border-radius:10px;padding:11px 14px;margin:12px 0;font-size:13.5px;}
+  .busybar.on{display:flex;}
   .cardops{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;}
   .cardops button{min-height:44px;padding:0 11px;border-radius:9px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12px;cursor:pointer;font-weight:600;}
   .cardops button.up{border-color:#7a4a2a;color:#ffb98a;}
@@ -182,7 +185,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.18.0 · 카드 강화·약화·변환 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.19.0 · 생성 중 잠금 · 복원 표식 · 내부용</span>
 </header>
 <main>
 
@@ -298,6 +301,7 @@
   <div class="q" id="scenes-title">10장면 스토리</div>
   <div class="coach">💡 <b>장면을 눌러</b> 문구를 바로 고칠 수 있어요. 마음에 들면 <b>[내보내기]</b> 하면 끝! <span class="stub" id="engine-ind">엔진: 준비</span> <span class="stub" id="mode-ind"></span><span class="perf" id="perf" data-testid="perf"></span></div>
   <div class="offbar" id="offbar">📴 <span>인터넷이 끊겼어요. <b>지금까지 만든 내용은 그대로 있고 계속 고칠 수 있습니다.</b> 새로 AI를 부르는 기능(다시 쓰기·다른 형식)만 잠시 안 됩니다.</span></div>
+  <div class="busybar" id="busybar" data-testid="busybar">⏳ <span><b>아직 만드는 중입니다.</b> 다 될 때까지 저장·내보내기 버튼은 잠깐 잠급니다 — 빈 파일이 저장되는 것을 막기 위해서예요.</span></div>
   <div class="nudge" id="nudge">✅ <b>10장면이 나왔어요.</b> 이대로 괜찮으면 바로 <b>[JSON 내보내기]</b>로 끝내도 됩니다. 고치고 싶은 문구가 있으면 장면의 <b>[✏️ 고치기]</b>를 누르세요 — <b>선택 사항</b>입니다.</div>
   <div id="printhead"><h2 id="print-title" style="font-size:18pt;margin-bottom:4px"></h2><p id="print-sub" style="font-size:11pt;color:#444;margin-bottom:12px"></p></div>
   <div class="scenegrid" id="scenegrid"></div>
@@ -404,7 +408,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.18.0 · 카드 강화·약화·변환</span>
+  <span>v0.19.0 · 생성 중 잠금·복원 표식</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -1135,8 +1139,27 @@ var app=(function(){
         (riskN?' · <span style="color:var(--warn)">⚠️ 확인 필요한 문구 '+riskN+'개</span>':'')+
         (longN?' · <span style="color:var(--dim)">✂️ 긴 문구 '+longN+'개</span>':'');}
     try{renderFontBar();applyFont();}catch(e){}}
+  /* v0.19.0 F-28 대응: 생성이 끝나기 전에 내보내기가 눌리면 빈 스토리보드가 저장된다.
+     실측 근거: 2026-07-28 실사용 로그에서 S7(내보내기)이 S4(생성) 완료보다 6.2초 먼저 발생. */
+  function setBusy(on){
+    state._busy=!!on;
+    var sc=document.getElementById("scr-scenes");
+    if(sc) sc.classList.toggle("busy",!!on);
+    var b=document.getElementById("busybar");
+    if(b) b.classList.toggle("on",!!on);
+  }
+  function guardBusy(what){
+    if(!state._busy) return false;
+    ONBO.card("blocked_while_busy",what||"1");
+    var b=document.getElementById("busybar");
+    if(b){ b.classList.add("on");
+      b.innerHTML='⏳ <span><b>아직 만드는 중이라 지금은 저장할 수 없어요.</b> 몇 초만 기다리면 자동으로 풀립니다.</span>'; }
+    say("아직 만드는 중입니다. 잠시 후 다시 시도해 주세요.");
+    return true;
+  }
   async function generateAndShow(){
     ONBO.step(3,"exit"); ONBO.step(4,"enter"); /*STEP:4*/
+    setBusy(true);
     document.getElementById("scenes-title").textContent="「"+nm()+"」 온보딩 스토리";
     show("scr-scenes");
     document.getElementById("scenegrid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--dim);font-size:14px">🤖 AI가 「'+esc(nm())+'」의 10장면을 쓰는 중…<br><span style="font-size:12px">보통 3~8초 걸려요</span></div>';
@@ -1155,6 +1178,7 @@ var app=(function(){
     var _t1=Date.now();
     renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); renderSlots(); saveDraft();
     perf("화면 표시",Date.now()-_t1);
+    setBusy(false);
     say(state.scenes.length+"개 장면이 만들어졌습니다. 장면을 눌러 고치거나, 내보내기 버튼으로 저장하세요.");
     ONBO.step(5,"exit"); /*STEP:5*/
   }
@@ -1189,7 +1213,8 @@ var app=(function(){
       var d=loadDraft(); if(d&&d.scenes&&d.scenes.length>=3){var b=document.getElementById("resumebar");if(b){b.style.display="flex";document.getElementById("resume-name").textContent="「"+(d.name||ph(d.goal||"activation")[0])+"」";}}
     },
     /* v0.6.1 N3: 저장된 초안 이어서 */
-    resumeDraft:function(){var d=loadDraft();if(!d)return;state.goal=d.goal;state.name=d.name||"";state.desc=d.desc||"";state.feats=d.feats||[];state.audience=d.audience;state.tone=d.tone||"plain";state.scenes=d.scenes;state.brand=d.brand||"default";state.font=d.font||"sans";state.lang=d.lang||"ko";state.selected=-1;state._s6saved=false;
+    resumeDraft:function(){var d=loadDraft();if(!d)return;
+      ONBO.card("restore_resume",String((d.scenes||[]).length)); /* v0.19.0 F-27b: 복원 실행임을 로그에 남긴다 */state.goal=d.goal;state.name=d.name||"";state.desc=d.desc||"";state.feats=d.feats||[];state.audience=d.audience;state.tone=d.tone||"plain";state.scenes=d.scenes;state.brand=d.brand||"default";state.font=d.font||"sans";state.lang=d.lang||"ko";state.selected=-1;state._s6saved=false;
       var b=document.getElementById("resumebar");if(b)b.style.display="none";
       /* 복원 시 앞 단계 계측 채움(RV 완전성 유지) */
       ONBO.step(2,"exit");ONBO.step(3,"enter");ONBO.step(3,"exit");ONBO.step(4,"enter");ONBO.step(4,"exit");ONBO.step(5,"enter");
@@ -1218,6 +1243,7 @@ var app=(function(){
     onInput:function(){state.name=document.getElementById("in-name").value;state.desc=document.getElementById("in-desc").value;drawStrip();},
     /* v0.6.1 형식 렌더러 — 같은 소재로 여러 형식 즉시 생성(레지스트리) */
     renderFormat:async function(key){
+      if(guardBusy("format")) return;
       var F=FORMATS[key]; if(!F)return;
       var out=document.getElementById("fmt-out"); out.style.display="block";
       out.innerHTML='🤖 같은 내용으로 <b>'+F.label+'</b>을(를) 만드는 중… <span style="font-size:12px">3~10초</span>';
@@ -2018,6 +2044,7 @@ var app=(function(){
     },
     /* v0.10.0 워드에서 열리는 문서(.doc) — 회사 보고용 */
     exportDOC:function(){
+      if(guardBusy("doc")) return;
       var f=feats(), B=brand(), FF=font().ppt, sc=state.scenes||[];
       var anyHint=sc.some(function(x){return !!x.hint;});
       var rows=sc.map(function(x){return '<tr><td style="text-align:center">'+x.idx+'</td><td>'+esc(x.role||"")+'</td><td>'+esc(x.text||"")+'</td>'+(anyHint?('<td>'+esc(x.hint||"")+'</td>'):'')+'<td style="text-align:center">'+(x.dur||3)+'초</td></tr>';}).join("");
@@ -2084,6 +2111,7 @@ var app=(function(){
     },
     /* v0.9.0 보고용 장표 — 사내 보고 포맷(표지·한장요약·핵심기능·스토리표·다음단계) */
     exportReport:async function(){
+      if(guardBusy("report")) return;
       var st2=function(h){var d=document.getElementById("pptx-status"); if(d){d.style.display="block"; d.innerHTML=h;}};
       try{
         st2("📑 보고용 장표를 만드는 중…");
@@ -2138,6 +2166,7 @@ var app=(function(){
       }
     },
     exportMD:function(){
+      if(guardBusy("md")) return;
       var f=feats(), b=brand();
       var md="# "+nm()+"\n\n> "+ds()+"\n\n";
       md+="- 목적: "+(state.goal||"-")+"\n- 대상: "+(state.audience||"-")+"\n- 말투: "+(state.tone==="emotive"?"감성":"담백")+"\n- 브랜드 색: "+b.n+"\n- 글꼴: "+font().n+"\n\n";
@@ -2177,6 +2206,7 @@ var app=(function(){
       app.hubSync();
     },
     exportPPTX:async function(){
+      if(guardBusy("pptx")) return;
       var st2=function(h){var d=document.getElementById("pptx-status"); if(d){d.style.display="block"; d.innerHTML=h;}};
       try{
         st2("📊 PPT 만드는 중…");
@@ -2269,6 +2299,12 @@ var app=(function(){
     saveScene:function(){if(state.selected<0)return;app.commitOpenEditor();app._markEdited(state.scenes[state.selected].idx); renderScenes();},
     closeEditor:function(){app.commitOpenEditor();document.getElementById("editor").style.display="none";state.selected=-1;renderScenes();},
     exportJSON:function(){
+      if(guardBusy("export")) return;
+      if(!state.scenes||state.scenes.length<1){
+        var s0=document.getElementById("cz-status");
+        if(s0) s0.innerHTML='<span class="warn">아직 만들어진 장면이 없어요. 생성이 끝난 뒤 저장해주세요.</span>';
+        ONBO.card("export_empty","1"); return;
+      }
       app.commitOpenEditor(); document.getElementById("editor").style.display="none"; state.selected=-1; /* v0.6.1: 편집 자동저장(유실 방지) */
       ONBO.step(7,"enter"); /*STEP:7*/
       var payload={app:"onbo-studio",version:CONTRACT.version+"-prealpha",vertical:"app",contentMode:state.tone==="emotive"?"b":"a",
