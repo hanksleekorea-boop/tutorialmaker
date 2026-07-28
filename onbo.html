@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.17.0 (전 형식 AI 복구·실패 원인 표시·재시도)</title>
+<title>온보 스튜디오 — pre-alpha v0.18.0 (카드 강화·약화·변환 = 이야기 엔진 2단계)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.17.0","steps":[
+{"version":"0.18.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -154,6 +154,12 @@
   .bulkbar button{min-height:44px;padding:0 13px;border-radius:8px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12.5px;cursor:pointer;}
   .bulkbar button.danger{color:#ff8c8c;border-color:#4a2a2a;}
   .shortbtn{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--warn);background:#241c11;color:#ffd9a8;font-size:12px;cursor:pointer;margin-left:8px;}
+  .cardops{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;}
+  .cardops button{min-height:44px;padding:0 11px;border-radius:9px;border:1px solid var(--line);background:#171b26;color:var(--acc2);font-size:12px;cursor:pointer;font-weight:600;}
+  .cardops button.up{border-color:#7a4a2a;color:#ffb98a;}
+  .cardops button.down{border-color:#2a5a4a;color:#8fe0c0;}
+  .cardops button.tf{border-color:#3a3a6a;color:#b0b8ff;}
+  .strength{display:inline-block;margin-top:6px;font-size:10.5px;color:var(--dim);}
   #diagbox{margin-top:10px;font-family:monospace;font-size:11px;color:var(--acc2);background:#0d0f16;border:1px solid var(--line);border-radius:8px;padding:9px;word-break:break-all;display:none;}
   .edctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}
   .edctl label{margin:0;font-size:12px;color:var(--dim);}
@@ -176,7 +182,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.17.0 · 전 형식 AI 복구 · 실패 원인 표시 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.18.0 · 카드 강화·약화·변환 · 내부용</span>
 </header>
 <main>
 
@@ -302,8 +308,17 @@
       <label for="ed-role">역할</label>
       <input id="ed-role" data-testid="ed-role" list="rolelist" placeholder="예: 훅">
       <datalist id="rolelist"><option value="훅"><option value="문제"><option value="해결"><option value="기능①"><option value="기능②"><option value="기능③"><option value="신뢰"><option value="권한"><option value="첫 행동"><option value="시작"><option value="마무리"></datalist>
+      <label for="ed-role">세기</label>
+      <span class="strength" id="ed-strength" data-testid="ed-strength">보통</span>
       <label for="ed-dur">길이</label>
       <select id="ed-dur" data-testid="ed-dur"><option value="2">2초</option><option value="3" selected>3초</option><option value="4">4초</option><option value="5">5초</option><option value="7">7초</option></select>
+    </div>
+    <div class="cardops">
+      <button class="up" data-testid="btn-boost" onclick="app.reshape('boost')">🔥 강화</button>
+      <button class="down" data-testid="btn-soften" onclick="app.reshape('soften')">🌿 약화</button>
+      <button class="tf" data-testid="btn-tf-q" onclick="app.reshape('question')">❓ 질문형으로</button>
+      <button class="tf" data-testid="btn-tf-fact" onclick="app.reshape('fact')">📊 사실형으로</button>
+      <button class="tf" data-testid="btn-tf-story" onclick="app.reshape('story')">📖 이야기형으로</button>
     </div>
     <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-dup" onclick="app.dupScene()">⧉ 이 장면 복제</button><button class="btn ghost" data-testid="btn-lock" onclick="app.toggleLock()">🔒 이 장면 잠그기</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
@@ -389,7 +404,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.17.0 · 전형식AI복구·실패원인·재시도</span>
+  <span>v0.18.0 · 카드 강화·약화·변환</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -568,7 +583,7 @@ var app=(function(){
     var name=nm(), tok=function(t){return String(t==null?"":t).split(name).join("\u0001").replace(/[\t\n]/g," ");};
     var head=["2",CONTRACT.version,name,ds(),state.goal||"",state.audience||"",state.tone||"plain",
       state.brand||"default",state.font||"sans",(state.feats||[]).join("|")].map(function(x){return String(x).replace(/[\t\n]/g," ");}).join("\t");
-    var body=(state.scenes||[]).map(function(x){return [tok(x.role),tok(x.text),x.dur||3,tok(x.hint||"")].join("\t");}).join("\n");
+    var body=(state.scenes||[]).map(function(x){return [tok(x.role),tok(x.text),x.dur||3,tok(x.hint||""),(x.str||0),(x.shape||"")].join("\t");}).join("\n");
     return b64enc(head+"\n"+body);
   }
   function unpackShare(code){
@@ -582,7 +597,7 @@ var app=(function(){
       for(var i=1;i<lines.length;i++){
         if(!lines[i]) continue;
         var c=lines[i].split("\t");
-        s.push([un(c[0]),un(c[1]),parseInt(c[2],10)||3,un(c[3]||"")]);
+        s.push([un(c[0]),un(c[1]),parseInt(c[2],10)||3,un(c[3]||""),parseInt(c[4],10)||0,(c[5]||"")]);
       }
       if(!s.length) return null;
       return {v:h[1],n:name,d:h[3],g:h[4],a:h[5]||null,t:h[6],b:h[7],ft:h[8],f:(h[9]?h[9].split("|"):[]),s:s};
@@ -1106,6 +1121,8 @@ var app=(function(){
       if(isLong) chips+='<span class="warnchip" data-testid="long-'+s.idx+'">✂️ '+String(s.text).length+'자 — 45자 이내 권장</span>'+
         '<button class="shortbtn" data-testid="short-'+s.idx+'" onclick="event.stopPropagation();app.shorten('+i+')">✂️ 줄이기</button>';
       var hint=s.hint?('<span class="rolehint" data-testid="hint-'+s.idx+'" style="color:var(--acc2)">🎨 '+esc(s.hint)+'</span>'):"";
+      if(s.str) chips+='<span class="warnchip" data-testid="str-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">'+(s.str>0?('🔥 강화 x'+s.str):('🌿 약화 x'+Math.abs(s.str)))+'</span>';
+      if(s.shape) chips+='<span class="warnchip" data-testid="shape-'+s.idx+'" style="border-color:#7b83c9;color:#b0b8ff">'+({question:'❓ 질문형',fact:'📊 사실형',story:'📖 이야기형'}[s.shape]||s.shape)+'</span>';
       if(s.lock) chips+='<span class="warnchip" data-testid="lock-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">🔒 잠김 — 일괄 변경에서 보호</span>';
       html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+((state._pick&&state._pick[i])?" picked":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><span class="selbox" data-testid="pick-'+s.idx+'" onclick="event.stopPropagation();app.togglePick('+i+')" title="여러 장면 고르기">'+((state._pick&&state._pick[i])?"☑":"☐")+'</span><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}
     state._riskN=riskN;
@@ -1156,7 +1173,7 @@ var app=(function(){
           if(o){
             state.name=o.n||""; state.desc=o.d||""; state.goal=o.g||"activation"; state.audience=o.a||null;
             state.tone=o.t||"plain"; state.brand=o.b||"default"; state.font=o.ft||"sans"; state.feats=o.f||[];
-            state.scenes=(o.s||[]).map(function(x,i){return {idx:i+1,role:x[0],text:x[1],dur:x[2]||3,hint:x[3]||undefined};});
+            state.scenes=(o.s||[]).map(function(x,i){return {idx:i+1,role:x[0],text:x[1],dur:x[2]||3,hint:x[3]||undefined,str:x[4]||0,shape:x[5]||undefined};});
             ONBO.card("share_open",String(state.scenes.length));
             ONBO.step(2,"exit"); /*STEP:2*/ ONBO.step(3,"enter"); /*STEP:3*/ ONBO.step(3,"exit"); /*STEP:3*/
             ONBO.step(4,"enter"); /*STEP:4*/ ONBO.step(4,"exit"); /*STEP:4*/ ONBO.step(5,"enter"); /*STEP:5*/
@@ -1435,6 +1452,80 @@ var app=(function(){
       if(!confirm("보관한 슬롯을 모두 비울까요? (지금 만들고 있는 내용에는 영향 없음)")) return;
       try{ localStorage.removeItem(SKEY); }catch(e){}
       ONBO.card("slot_clear","1"); renderSlots();
+    },
+    /* ===== v0.18.0 이야기 엔진 2단계 — 카드 단위 강화·약화·변환 =====
+       재정렬(↑↓)·강화·약화·변환 네 축을 카드 하나에서 모두 조작할 수 있게 한다.
+       모든 조작은 snapshot을 남겨 되돌릴 수 있다. AI 실패 시 규칙 기반으로도 반드시 결과를 낸다. */
+    reshape:async function(kind){
+      var i=state.selected; if(i<0||!state.scenes[i]) return;
+      var sc=state.scenes[i], ta=document.getElementById("ed-text");
+      var cur=(ta?ta.value:sc.text)||"";
+      var st=document.getElementById("cz-status");
+      var LABEL={boost:"강화",soften:"약화",question:"질문형 변환",fact:"사실형 변환",story:"이야기형 변환"}[kind]||kind;
+      ONBO.card("reshape",kind+":"+sc.idx);
+      if(ta){ ta.disabled=true; ta.value="⏳ "+LABEL+" 중…"; }
+      var RULE={
+        boost:"더 강하게. 첫 단어부터 임팩트가 오게. 단정적이고 짧게. 다만 없는 사실·수치·수상은 절대 만들지 말 것.",
+        soften:"더 차분하게. 과장·단정 표현을 덜어내고 담백하게. 정보는 유지.",
+        question:"읽는 사람에게 던지는 질문 한 문장으로.",
+        fact:"사실 중심 한 문장으로. 확인된 내용만, 형용사 최소화.",
+        story:"짧은 장면이 그려지는 한 문장으로. 사람이 등장하거나 상황이 보이게."
+      }[kind];
+      var p=[ '온보딩 장면 문구 한 줄을 다시 써라.',
+        '제품: '+srcLine(),
+        '역할: '+(sc.role||''),
+        '지금 문구: '+cur,
+        '요구: '+RULE,
+        (isEN()?'Write in English.':'한국어 1문장 45자 이내.'),
+        '출력: 문구 한 줄만. 따옴표·설명 금지.'].join('\n');
+      var shortP=(isEN()?'Rewrite in English, one line, max 80 chars: ':'한 줄로 다시 써라(45자 이내): ')+cur+' / '+RULE;
+      var rr=await callProxyRetry(p,shortP,function(t){
+        var one=String(t||'').replace(/^[\s"'`]+|[\s"'`]+$/g,'').split(/\n/)[0].slice(0,90);
+        return (one&&one.length>=3)?one:null;
+      });
+      var out=rr?rr.obj:null, byAI=!!out;
+      if(!out) out=app.reshapeLocal(cur,kind,sc);
+      if(ta){ ta.disabled=false; ta.value=out; }
+      /* 세기 눈금: 강화 +1, 약화 -1 (-2~+2) */
+      if(kind==='boost') sc.str=Math.min(2,(sc.str||0)+1);
+      if(kind==='soften') sc.str=Math.max(-2,(sc.str||0)-1);
+      if(kind!=='boost'&&kind!=='soften') sc.shape=kind;
+      app.strengthLabel();
+      if(st) st.innerHTML=(byAI
+        ? ('✨ 진짜 AI로 <b>'+LABEL+'</b>했어요'+(rr.retried?' (짧게 다시 물어 성공)':'')+'. 마음에 들면 <b>[이 장면 저장]</b>.')
+        : ('<span class="warn">진짜 AI를 못 썼어요 — '+esc(failLabel(LASTFAIL))+'. <b>기본 규칙</b>으로 '+LABEL+'했어요. 마음에 들면 [이 장면 저장].</span>'));
+    },
+    /* AI 없이도 반드시 결과를 내는 규칙 기반 변형 */
+    reshapeLocal:function(t,kind,sc){
+      var x=String(t||'').trim();
+      if(kind==='soften'){
+        return x.replace(/!+/g,'.').replace(/(정말|매우|아주|굉장히|너무|절대|무조건)\s*/g,'')
+                .replace(/(하세요|해보세요)/g,'해도 좋아요').replace(/\s{2,}/g,' ').trim();
+      }
+      if(kind==='boost'){
+        var core=x.replace(/^(그리고|또한|아울러)\s*/,'').replace(/(입니다|합니다)\.?$/,'').trim();
+        return (core.length>34?core.slice(0,34):core)+' — 지금 바로.';
+      }
+      if(kind==='question'){
+        var q=x.replace(/[.!]+$/,'').replace(/(입니다|합니다)$/,'');
+        return q+', 그렇지 않나요?';
+      }
+      if(kind==='fact'){
+        return x.replace(/(정말|매우|아주|굉장히|너무|최고의|최적의)\s*/g,'')
+                .replace(/[!?]+/g,'.').replace(/\s{2,}/g,' ').trim();
+      }
+      if(kind==='story'){
+        var who=(sc&&/훅|문제/.test(sc.role||''))?'어느 날 아침, ':'그날 이후, ';
+        return who+x.replace(/^\s*/,'');
+      }
+      return x;
+    },
+    strengthLabel:function(){
+      var i=state.selected; if(i<0) return;
+      var sc=state.scenes[i], v=sc.str||0;
+      var name=({'-2':'많이 약함','-1':'약함','0':'보통','1':'강함','2':'많이 강함'})[String(v)]||'보통';
+      var el=document.getElementById("ed-strength");
+      if(el) el.textContent=name+(sc.shape?(' · '+({question:'질문형',fact:'사실형',story:'이야기형'}[sc.shape]||sc.shape)):'');
     },
     /* v0.14.0 여러 장면 고르기 */
     togglePick:function(i){
@@ -2160,13 +2251,15 @@ var app=(function(){
     openEditor:function(i){state.selected=i;state._s6saved=false;var s=state.scenes[i];ONBO.step(6,"enter"); /*STEP:6*/ document.getElementById("editor").style.display="block";document.getElementById("ed-title").textContent="#"+s.idx+" · "+s.role;document.getElementById("ed-text").value=s.text;
       var rr=document.getElementById("ed-role"); if(rr) rr.value=s.role||"";
       var dd=document.getElementById("ed-dur"); if(dd) dd.value=String(s.dur||3);
+      app.strengthLabel();
       renderScenes();},
     commitOpenEditor:function(){if(state.selected<0)return;
       var sc=state.scenes[state.selected];
       var nt=document.getElementById("ed-text").value;
       var rr=document.getElementById("ed-role"), dd=document.getElementById("ed-dur");
       var nr=rr?String(rr.value||sc.role).trim():sc.role, nd=dd?parseInt(dd.value,10)||sc.dur||3:(sc.dur||3);
-      if(nt!==sc.text||nr!==sc.role||nd!==sc.dur) snapshot("장면 편집");
+      if(nt!==sc.text||nr!==sc.role||nd!==sc.dur||sc._pendingShape) snapshot("장면 편집");
+      delete sc._pendingShape;
       sc.text=nt; if(nr) sc.role=nr; sc.dur=nd;
       saveDraft();if(!state._s6saved){ONBO.step(6,"exit"); /*STEP:6*/ state._s6saved=true;}},
     _markEdited:function(idx){ state._edited=state._edited||{}; state._edited[idx]=true;
