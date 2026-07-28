@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.20.0 (표준 리소스 StoryboardIR v1·진행 표시·드래그 재정렬)</title>
+<title>온보 스튜디오 — pre-alpha v0.21.0 (구성 자동 추천·변환 8종·일괄 강약·자막/대본 어댑터)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.20.0","steps":[
+{"version":"0.21.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -155,6 +155,16 @@
   .bulkbar button.danger{color:#ff8c8c;border-color:#4a2a2a;}
   .shortbtn{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--warn);background:#241c11;color:#ffd9a8;font-size:12px;cursor:pointer;margin-left:8px;}
   .busy .btn,.busy .fmttile,.busy .scenetools button,.busy .bulkbar button,.busy .cardops button,.busy .swatch,.busy .fontpick{opacity:.45;pointer-events:none;}
+  /* v0.21.0 구성 자동 추천 */
+  .recobox{margin-top:12px;border:1px solid var(--accbright);border-radius:11px;padding:13px 15px;background:#141c2b;font-size:13px;line-height:1.85;display:none;}
+  .recobox.on{display:block;}
+  .recobox .rt{font-size:14px;color:var(--txt);font-weight:700;margin-bottom:5px;}
+  .recobox ul{margin:7px 0 0 18px;padding:0;color:var(--dim);}
+  .recobox li{margin:2px 0;}
+  .recobox .rrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;}
+  .recobox .rrow button{min-height:44px;padding:0 15px;border-radius:9px;border:1px solid var(--line);background:#171b26;color:var(--txt);font-size:13px;cursor:pointer;}
+  .recobox .rrow button.go{border-color:var(--acc2);color:var(--acc2);font-weight:700;}
+  .recobox .conf{font-size:11.5px;color:var(--dim);margin-top:8px;}
   /* v0.20.0 진행 표시기 */
   .genwrap{grid-column:1/-1;text-align:center;padding:34px 12px;color:var(--dim);font-size:14px;}
   .genwrap .gtitle{font-size:15px;color:var(--txt);margin-bottom:14px;}
@@ -210,7 +220,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.20.0 · 표준 리소스(IR) · 진행 표시 · 드래그 재정렬 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.21.0 · 구성 추천 · 변환 8종 · 자막/대본 어댑터 · 내부용</span>
 </header>
 <main>
 
@@ -348,6 +358,9 @@
       <button class="tf" data-testid="btn-tf-q" onclick="app.reshape('question')">❓ 질문형으로</button>
       <button class="tf" data-testid="btn-tf-fact" onclick="app.reshape('fact')">📊 사실형으로</button>
       <button class="tf" data-testid="btn-tf-story" onclick="app.reshape('story')">📖 이야기형으로</button>
+      <button class="tf" data-testid="btn-tf-cmp" onclick="app.reshape('compare')">⚖️ 비교형으로</button>
+      <button class="tf" data-testid="btn-tf-num" onclick="app.reshape('number')">🔢 숫자형으로</button>
+      <button class="tf" data-testid="btn-tf-quote" onclick="app.reshape('quote')">💬 인용형으로</button>
     </div>
     <div class="row"><button class="btn" data-testid="btn-save-scene" onclick="app.saveScene()">이 장면 저장</button><button class="btn ghost" data-testid="btn-up" onclick="app.moveScene(-1)">↑ 앞으로</button><button class="btn ghost" data-testid="btn-down" onclick="app.moveScene(1)">↓ 뒤로</button><button class="btn ghost" data-testid="btn-regen" onclick="app.regenScene()">🔄 이 장면만 다시</button><button class="btn ghost" data-testid="btn-addafter" onclick="app.addScene()">➕ 아래에 장면 추가</button><button class="btn ghost" data-testid="btn-dup" onclick="app.dupScene()">⧉ 이 장면 복제</button><button class="btn ghost" data-testid="btn-lock" onclick="app.toggleLock()">🔒 이 장면 잠그기</button><button class="btn ghost" data-testid="btn-del" onclick="app.deleteScene()" style="color:#ff8c8c">🗑 이 장면 삭제</button><button class="btn ghost" onclick="app.closeEditor()">닫기</button></div>
   </div>
@@ -359,6 +372,8 @@
     <span id="bulkcount"></span>
     <button data-testid="bulk-del" class="danger" onclick="app.bulkDelete()">🗑 고른 장면 삭제</button>
     <button data-testid="bulk-dur" onclick="app.bulkDur()">⏱ 고른 장면 길이 바꾸기</button>
+    <button data-testid="bulk-boost" onclick="app.bulkStrength(1)">🔥 고른 장면 강화</button>
+    <button data-testid="bulk-soften" onclick="app.bulkStrength(-1)">🌿 고른 장면 약화</button>
     <button data-testid="bulk-clear" onclick="app.clearPick()">선택 해제</button>
   </div>
   <div class="scenetools">
@@ -369,6 +384,7 @@
     <button data-testid="btn-fit30" onclick="app.fitTotal(30)">⏱ 총 30초로 맞추기</button>
     <button data-testid="btn-fit60" onclick="app.fitTotal(60)">⏱ 60초</button>
     <button data-testid="btn-hint" onclick="app.makeHints()">🎨 장면별 그림 힌트</button>
+    <button data-testid="btn-reco" onclick="app.showReco()">🧭 구성 추천 보기</button>
     <button data-testid="btn-preset" onclick="app.applyPreset()">🧩 역할 구성 바꾸기</button>
     <button data-testid="btn-diag" onclick="app.diagCode()">🩺 진단 코드</button>
     <button data-testid="slot-save" onclick="app.slotSave()">📥 슬롯에 보관</button>
@@ -378,6 +394,7 @@
     <button data-testid="btn-print" onclick="app.printView()">🖨 인쇄 / PDF로 저장</button>
     <span id="scenecount" style="align-self:center;font-size:12.5px;color:var(--dim)"></span>
   </div>
+  <div class="recobox" id="recobox" data-testid="recobox"></div>
   <div class="opsbox" id="opsbox" data-testid="opsbox"></div>
   <div class="irbox" id="irbox" data-testid="irbox"></div>
   <div class="fmtbar" style="margin-top:14px">
@@ -386,6 +403,8 @@
       <button class="fmttile" data-testid="btn-export-ir" onclick="app.exportIR()">📦 표준 리소스 내보내기</button>
       <button class="fmttile" data-testid="btn-import-ir" onclick="app.importIR()">📥 표준 리소스 가져오기</button>
       <button class="fmttile" data-testid="btn-ir-check" onclick="app.irCheck()">🧪 왕복 검사</button>
+      <button class="fmttile" data-testid="btn-srt" onclick="app.exportSRT()">🎬 자막(.srt)으로</button>
+      <button class="fmttile" data-testid="btn-script" onclick="app.exportScript()">📋 촬영 대본(.md)으로</button>
     </div>
     <input type="file" id="ir-file" data-testid="ir-file" accept=".json,application/json" style="display:none" onchange="app.onIRFile(this)">
   </div>
@@ -445,7 +464,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.20.0 · 표준 리소스 IR·진행 표시·드래그 재정렬</span>
+  <span>v0.21.0 · 구성 추천·변환 8종·일괄 강약·자막/대본</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -641,6 +660,58 @@ var app=(function(){
       if(UNDO.length>10) UNDO.shift();
       REDO.length=0;
     }catch(e){}
+  }
+  /* ===== v0.21.0 구성 자동 추천 (S12) =====
+     "왜 이 구성인가"를 말하지 못하는 추천은 사용자를 설득하지 못한다.
+     규칙은 전부 사용자가 이미 고른 값(목적·대상·톤·기능 수)에서만 나온다. 새 사실을 지어내지 않는다. */
+  var COMPOSITIONS={
+    onboarding:{n:"앱 온보딩(10장면)",r:["훅","문제","해결","기능①","기능②","기능③","신뢰","권한","첫 행동","시작"]},
+    report:{n:"사내 보고(7장면)",r:["배경","문제","제안","방법","기대효과","위험과 대응","다음 단계"]},
+    intro:{n:"제품 소개(6장면)",r:["한 줄 소개","누구를 위한 것","무엇이 다른가","어떻게 쓰나","증거","시작하기"]},
+    lesson:{n:"배움 순서(8장면)",r:["왜 배우나","오늘 할 것","1단계","2단계","3단계","자주 하는 실수","확인 문제","다음 시간"]},
+    story:{n:"이야기 흐름(6장면)",r:["평범한 하루","사건","갈등","전환","해결","남은 것"]},
+    short:{n:"짧게 핵심만(5장면)",r:["훅","문제","해결","증거","시작"]}
+  };
+  function recommendComposition(){
+    var g=state.goal||"activation", a=state.audience||"", t=state.tone||"plain";
+    var nf=(state.feats||[]).length, dl=String(ds()||"").length;
+    var why=[], id="onboarding", conf="보통";
+    if(g==="education"){ id="lesson"; why.push("목적을 <b>가르치기</b>로 고르셨어요 — 배우는 사람은 순서대로 따라갈 때 가장 잘 이해합니다."); }
+    else if(g==="pitch"){ id="report"; why.push("목적이 <b>설득·보고</b>예요 — 듣는 사람이 '왜 지금'과 '위험은'을 먼저 찾습니다."); }
+    else if(g==="marketing"){ id=(t==="emotive")?"story":"intro"; why.push(t==="emotive"?"목적이 <b>알리기</b>이고 톤이 <b>감성적</b>이에요 — 기능 나열보다 장면이 기억에 남습니다.":"목적이 <b>알리기</b>이고 톤이 <b>담백</b>해요 — 무엇이 다른지 빠르게 짚는 구성이 맞습니다."); }
+    else { id="onboarding"; why.push("목적이 <b>처음 쓰게 하기</b>예요 — 훅 → 문제 → 해결 → 기능 → 첫 행동 순서가 가장 오래 검증된 흐름입니다."); }
+
+    /* 대상 값은 화면의 data-aud 그대로다: busy_doer | decision_maker | general_public */
+    if(a==="busy_doer"){ if(id==="onboarding"||id==="intro"){ id="short"; why.push("대상이 <b>바쁜 실무자</b>라 장면 수를 <b>5개</b>로 줄였어요 — 끝까지 볼 확률이 올라갑니다."); } else why.push("대상이 <b>바쁜 실무자</b>니 장면마다 문구를 짧게 유지하세요."); }
+    if(a==="decision_maker"&&id!=="report"){ why.push("대상이 <b>결정권자</b>예요 — '증거'와 '다음 단계' 장면을 특히 구체적으로 채우세요."); }
+    if(a==="general_public"){ why.push("대상이 <b>일반 대중</b>이에요 — 전문 용어보다 겪는 일로 쓰는 편이 잘 읽힙니다."); }
+
+    var R=COMPOSITIONS[id];
+    if(nf>=3&&id==="short"){ why.push("다만 기능을 <b>"+nf+"개</b> 적으셨어요 — 5장면에는 다 못 담기니 대표 1~2개만 고르세요."); }
+    if(nf===0) why.push("기능을 아직 안 적으셨어요 — 기능 장면은 비어 있을 수 있으니 나중에 채우거나 지우세요.");
+    if(dl>0&&dl<12) why.push("설명이 <b>"+dl+"자</b>로 짧아요 — 장면 문구도 그만큼 추상적일 수 있습니다. 설명을 늘리면 결과가 구체해집니다.");
+
+    conf = (state.goal&&state.audience) ? (nf>0?"높음":"보통") : "낮음";
+    if(conf==="낮음") why.push("목적·대상 중 하나가 비어 있어 <b>확신이 낮습니다</b> — 지금 구성을 유지하셔도 괜찮아요.");
+    return {id:id,name:R.n,roles:R.r.slice(),why:why,conf:conf};
+  }
+  function currentRoleSig(){ return (state.scenes||[]).map(function(x){return x.role;}).join("|"); }
+  function renderReco(auto){
+    var b=document.getElementById("recobox"); if(!b) return;
+    var r=recommendComposition(); state._reco=r;
+    var sameLen=(state.scenes||[]).length===r.roles.length;
+    var same=sameLen && currentRoleSig()===r.roles.join("|");
+    if(auto&&same){ b.classList.remove("on"); return; }
+    b.classList.add("on");
+    b.innerHTML='<div class="rt" data-testid="reco-name">🧭 추천 구성: '+esc(r.name)+(same?' <span style="color:var(--acc2);font-size:12px">— 지금 구성과 같아요</span>':'')+'</div>'+
+      '<div style="color:var(--dim)">왜 이 구성인가요?</div>'+
+      '<ul data-testid="reco-why">'+r.why.map(function(w){return '<li>'+w+'</li>';}).join("")+'</ul>'+
+      '<div class="conf" data-testid="reco-conf">추천 확신: <b>'+r.conf+'</b> · 근거는 <b>고르신 값만</b> 씁니다. 없는 사실은 넣지 않았어요.</div>'+
+      '<div class="rrow">'+
+        (same?'':'<button class="go" data-testid="reco-apply" onclick="app.applyReco()">이 구성으로 바꾸기</button>')+
+        '<button data-testid="reco-keep" onclick="app.dismissReco()">지금 구성 유지</button>'+
+      '</div>';
+    ONBO.card("reco_show",r.id+":"+r.conf+(same?":same":""));
   }
   /* ===== v0.20.0 StoryboardIR v1 — 표준 리소스 규격 =====
      목적: 만들어진 스토리보드를 우리 앱 밖(다른 콘텐츠 메이커·툴)에서도 그대로 쓸 수 있는
@@ -1313,7 +1384,7 @@ var app=(function(){
         '<button class="shortbtn" data-testid="short-'+s.idx+'" onclick="event.stopPropagation();app.shorten('+i+')">✂️ 줄이기</button>';
       var hint=s.hint?('<span class="rolehint" data-testid="hint-'+s.idx+'" style="color:var(--acc2)">🎨 '+esc(s.hint)+'</span>'):"";
       if(s.str) chips+='<span class="warnchip" data-testid="str-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">'+(s.str>0?('🔥 강화 x'+s.str):('🌿 약화 x'+Math.abs(s.str)))+'</span>';
-      if(s.shape) chips+='<span class="warnchip" data-testid="shape-'+s.idx+'" style="border-color:#7b83c9;color:#b0b8ff">'+({question:'❓ 질문형',fact:'📊 사실형',story:'📖 이야기형'}[s.shape]||s.shape)+'</span>';
+      if(s.shape) chips+='<span class="warnchip" data-testid="shape-'+s.idx+'" style="border-color:#7b83c9;color:#b0b8ff">'+({question:'❓ 질문형',fact:'📊 사실형',story:'📖 이야기형',compare:'⚖️ 비교형',number:'🔢 숫자형',quote:'💬 인용형'}[s.shape]||s.shape)+'</span>';
       if(s.lock) chips+='<span class="warnchip" data-testid="lock-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">🔒 잠김 — 일괄 변경에서 보호</span>';
       html+='<div draggable="true" ondragstart="app.dragStart(event,'+i+')" ondragover="app.dragOver(event,'+i+')" ondragleave="app.dragLeave(event,'+i+')" ondrop="app.dragDrop(event,'+i+')" ondragend="app.dragEnd(event)" class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+((state._pick&&state._pick[i])?" picked":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><span class="selbox" data-testid="pick-'+s.idx+'" onclick="event.stopPropagation();app.togglePick('+i+')" title="여러 장면 고르기">'+((state._pick&&state._pick[i])?"☑":"☐")+'</span><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span>'+
         '<span class="movebtns"><button type="button" data-testid="cardup-'+s.idx+'" title="앞으로 옮기기" aria-label="'+s.idx+'번 장면을 앞으로 옮기기" onclick="event.stopPropagation();app.moveAt('+i+',-1)">↑</button>'+
@@ -1367,6 +1438,7 @@ var app=(function(){
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     var _t1=Date.now();
     renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); renderSlots(); saveDraft();
+    try{ renderReco(true); }catch(e){}
     perf("화면 표시",Date.now()-_t1);
     setBusy(false);
     say(state.scenes.length+"개 장면이 만들어졌습니다. 장면을 눌러 고치거나, 내보내기 버튼으로 저장하세요.");
@@ -1677,7 +1749,7 @@ var app=(function(){
       var sc=state.scenes[i], ta=document.getElementById("ed-text");
       var cur=(ta?ta.value:sc.text)||"";
       var st=document.getElementById("cz-status");
-      var LABEL={boost:"강화",soften:"약화",question:"질문형 변환",fact:"사실형 변환",story:"이야기형 변환"}[kind]||kind;
+      var LABEL={boost:"강화",soften:"약화",question:"질문형 변환",fact:"사실형 변환",story:"이야기형 변환",compare:"비교형 변환",number:"숫자형 변환",quote:"인용형 변환"}[kind]||kind;
       ONBO.card("reshape",kind+":"+sc.idx);
       if(ta){ ta.disabled=true; ta.value="⏳ "+LABEL+" 중…"; }
       var RULE={
@@ -1685,7 +1757,10 @@ var app=(function(){
         soften:"더 차분하게. 과장·단정 표현을 덜어내고 담백하게. 정보는 유지.",
         question:"읽는 사람에게 던지는 질문 한 문장으로.",
         fact:"사실 중심 한 문장으로. 확인된 내용만, 형용사 최소화.",
-        story:"짧은 장면이 그려지는 한 문장으로. 사람이 등장하거나 상황이 보이게."
+        story:"짧은 장면이 그려지는 한 문장으로. 사람이 등장하거나 상황이 보이게.",
+        compare:"'전에는/다른 방법은 ~, 이제는 ~' 대비 구조 한 문장으로. 경쟁사 이름·없는 단점은 절대 만들지 말 것. 일반적인 '기존 방식'까지만.",
+        number:"이미 문구나 제품 설명에 있는 수치만 앞으로 끌어와 한 문장으로. 수치가 없으면 만들지 말고 원문을 그대로 돌려줄 것.",
+        quote:"사용자가 직접 말하는 1인칭 한 문장으로. 실존 인물·후기·이름은 절대 만들지 말 것. 따옴표 안 문장만."
       }[kind];
       var p=[ '온보딩 장면 문구 한 줄을 다시 써라.',
         '제품: '+srcLine(),
@@ -1706,11 +1781,17 @@ var app=(function(){
       if(kind==='boost') sc.str=Math.min(2,(sc.str||0)+1);
       if(kind==='soften') sc.str=Math.max(-2,(sc.str||0)-1);
       if(kind!=='boost'&&kind!=='soften') sc.shape=kind;
-      opLog("변환",({boost:"강화",soften:"약화",question:"질문형으로 바꿈",fact:"사실형으로 바꿈",story:"이야기형으로 바꿈"}[kind]||kind),sc.idx);
+      opLog("변환",({boost:"강화",soften:"약화",question:"질문형으로 바꿈",fact:"사실형으로 바꿈",story:"이야기형으로 바꿈",compare:"비교형으로 바꿈",number:"숫자형으로 바꿈",quote:"인용형으로 바꿈"}[kind]||kind),sc.idx);
       app.strengthLabel();
+      var unchanged=(String(out).trim()===String(cur).trim());
       if(st) st.innerHTML=(byAI
         ? ('✨ 진짜 AI로 <b>'+LABEL+'</b>했어요'+(rr.retried?' (짧게 다시 물어 성공)':'')+'. 마음에 들면 <b>[이 장면 저장]</b>.')
-        : ('<span class="warn">진짜 AI를 못 썼어요 — '+esc(failLabel(LASTFAIL))+'. <b>기본 규칙</b>으로 '+LABEL+'했어요. 마음에 들면 [이 장면 저장].</span>'));
+        : (unchanged&&kind==='number'
+            ? '<span class="warn">이 문구에는 <b>쓸 수 있는 숫자가 없어서</b> 바꾸지 않았어요. 없는 수치를 지어내지 않았습니다 — 실제 수치를 직접 넣어주세요.</span>'
+            : (unchanged
+               ? ('<span class="warn">규칙만으로는 더 바꿀 부분을 못 찾았어요 — '+esc(failLabel(LASTFAIL))+'. 문구는 그대로 두었습니다.</span>')
+               : ('<span class="warn">진짜 AI를 못 썼어요 — '+esc(failLabel(LASTFAIL))+'. <b>기본 규칙</b>으로 '+LABEL+'했어요'+
+                  (kind==='quote'?' — 따옴표와 1인칭으로만 바꿨고 <b>실제 후기를 만들지 않았습니다</b>':'')+'. 마음에 들면 [이 장면 저장].</span>'))));
     },
     /* AI 없이도 반드시 결과를 내는 규칙 기반 변형 */
     reshapeLocal:function(t,kind,sc){
@@ -1734,6 +1815,24 @@ var app=(function(){
       if(kind==='story'){
         var who=(sc&&/훅|문제/.test(sc.role||''))?'어느 날 아침, ':'그날 이후, ';
         return who+x.replace(/^\s*/,'');
+      }
+      if(kind==='compare'){
+        var core=x.replace(/[.!?]+$/,'').trim();
+        if(/대신|없이|보다|전에는/.test(core)) return core+'.';
+        if(core.length>26) core=core.slice(0,26).replace(/\s\S*$/,'');
+        return '지금 쓰는 방법 대신 — '+core+'.';
+      }
+      if(kind==='number'){
+        var m=x.match(/(\d+[\d,.]*\s*[가-힣a-zA-Z%]*)/);
+        if(!m) return x;                                  /* 수치 없음 → 지어내지 않고 그대로 */
+        var rest=x.replace(m[0],'').replace(/^[\s,·—-]+/,'').replace(/[\s,·—-]+$/,'').trim();
+        return m[0].trim()+' — '+rest;
+      }
+      if(kind==='quote'){
+        var q2=x.replace(/[."'"]+$/,'').trim()
+                .replace(/하세요$/,'했어요').replace(/해보세요$/,'해봤어요')
+                .replace(/합니다$/,'해요').replace(/입니다$/,'이에요');
+        return '"'+q2+'"';
       }
       return x;
     },
@@ -1779,6 +1878,123 @@ var app=(function(){
       renderScenes(); saveDraft();
       var st=document.getElementById("cz-status");
       if(st) st.innerHTML='⏱ 고른 '+idx.length+'개 장면을 <b>'+d+'초</b>로 바꿨어요.';
+    },
+    /* v0.21.0 고른 장면 일괄 강화·약화 — 규칙 기반이라 즉시 끝나고 되돌릴 수 있다.
+       AI를 쓰지 않는 이유: 여러 장면을 한 번에 AI로 보내면 응답 절단 위험(F-30)이 그대로 곱해진다. */
+    bulkStrength:function(dir){
+      var idx=[]; (state._pick||[]).forEach(function(v,i){ if(v) idx.push(i); });
+      var st=document.getElementById("cz-status");
+      if(!idx.length){ if(st) st.innerHTML='먼저 장면 왼쪽 네모(☐)를 눌러 바꿀 장면을 골라주세요.'; return; }
+      var locked=idx.filter(function(i){return state.scenes[i]&&state.scenes[i].lock;});
+      var work=idx.filter(function(i){return !(state.scenes[i]&&state.scenes[i].lock);});
+      if(!work.length){ if(st) st.innerHTML='<span class="warn">고른 장면이 모두 잠겨 있어요(🔒). 잠금을 풀고 다시 시도해 주세요.</span>'; return; }
+      snapshot(dir>0?"여러 장면 강화":"여러 장면 약화");
+      var kind=dir>0?'boost':'soften', changed=0;
+      work.forEach(function(i){
+        var sc=state.scenes[i]; var before=String(sc.text||"");
+        var after=app.reshapeLocal(before,kind,sc);
+        if(after&&after!==before){ sc.text=after; changed++; }
+        sc.str = dir>0 ? Math.min(2,(sc.str||0)+1) : Math.max(-2,(sc.str||0)-1);
+      });
+      ONBO.card(dir>0?"bulk_boost":"bulk_soften",String(work.length));
+      opLog("변환",(dir>0?"고른 장면 강화":"고른 장면 약화")+" "+work.length+"개",null);
+      renderScenes(); saveDraft();
+      if(st) st.innerHTML=(dir>0?'🔥':'🌿')+' 고른 <b>'+work.length+'개 장면</b>의 세기를 '+(dir>0?'올렸':'내렸')+'어요'+
+        (changed<work.length?(' (문구가 실제로 바뀐 것은 '+changed+'개 — 나머지는 규칙으로 더 바꿀 부분이 없었습니다)'):'')+
+        (locked.length?(' · 잠긴 '+locked.length+'개는 건드리지 않았어요'):'')+
+        '. 되돌리려면 <b>[↩ 되돌리기]</b>.';
+      say(work.length+"개 장면의 세기를 바꿨습니다.");
+    },
+    /* v0.21.0 구성 자동 추천 (S12) */
+    showReco:function(){ renderReco(false); },
+    dismissReco:function(){
+      var b=document.getElementById("recobox"); if(b) b.classList.remove("on");
+      ONBO.card("reco_keep","1");
+      var st=document.getElementById("cz-status");
+      if(st) st.innerHTML='지금 구성을 그대로 둡니다. 다시 보려면 <b>[🧭 구성 추천]</b>을 누르세요.';
+    },
+    applyReco:function(){
+      var r=state._reco||recommendComposition();
+      snapshot("추천 구성 적용");
+      var roles=r.roles, old=state.scenes||[], out=[];
+      for(var i=0;i<roles.length;i++){
+        var src=old[i];
+        if(src&&src.lock){ out.push({idx:i+1,role:src.role,dur:src.dur||3,text:src.text,hint:src.hint,lock:true,str:src.str||0,shape:src.shape}); continue; }
+        out.push({idx:i+1,role:roles[i],dur:(src&&src.dur)||3,text:(src&&src.text)||"",hint:src&&src.hint,str:(src&&src.str)||0,shape:src&&src.shape});
+      }
+      state.scenes=out; state.selected=-1; state._pick=[];
+      var ed=document.getElementById("editor"); if(ed) ed.style.display="none";
+      document.getElementById("scenes-title").textContent="「"+nm()+"」 "+out.length+"장면 스토리";
+      ONBO.card("reco_apply",r.id+":"+out.length);
+      opLog("구성","추천 구성 적용 — "+r.name,null);
+      renderScenes(); saveDraft(); renderReco(false);
+      say(r.name+" 구성을 적용했습니다.");
+      var nb=document.getElementById("nudge");
+      if(nb) nb.innerHTML='🧭 <b>'+esc(r.name)+'</b>으로 바꿨어요. 빈 문구는 직접 채우거나 <b>[🔄 이 장면만 다시]</b>로 만들 수 있어요. 되돌리려면 <b>[↩ 되돌리기]</b>.';
+    },
+    /* ===== v0.21.0 IR 어댑터 — 표준 리소스를 다른 도구가 바로 먹는 형태로 =====
+       원칙: IR을 원본으로 삼고, 어댑터는 IR에서만 만든다(화면 상태에서 직접 만들지 않는다). */
+    exportSRT:function(){
+      if(guardBusy("export_srt")) return;
+      if(!state.scenes||!state.scenes.length){ ONBO.card("export_empty","srt"); return; }
+      app.commitOpenEditor();
+      var ir=buildIR(), t=0, lines=[];
+      function stamp(ms){
+        var h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), sec=Math.floor(ms%60000/1000), mm=Math.floor(ms%1000);
+        function p(v,n2){ v=String(v); while(v.length<n2) v="0"+v; return v; }
+        return p(h,2)+":"+p(m,2)+":"+p(sec,2)+","+p(mm,3);
+      }
+      ir.scenes.forEach(function(x,i){
+        var d=(+x.durationSec>0?+x.durationSec:3)*1000;
+        lines.push(String(i+1));
+        lines.push(stamp(t)+" --> "+stamp(t+d));
+        lines.push(String(x.text||""));
+        lines.push("");
+        t+=d;
+      });
+      var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
+      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+".srt",true);
+      ONBO.card("export_srt",String(ir.scenes.length));
+      var b=document.getElementById("irbox");
+      if(b){ b.classList.add("on");
+        b.innerHTML='🎬 <b>자막 파일(.srt)을 저장했어요.</b><div style="margin-top:6px">장면 '+ir.scenes.length+'개 · 총 '+Math.round(t/1000)+'초 · 각 장면의 길이를 그대로 자막 시간으로 썼습니다.</div>'+
+          '<div style="margin-top:6px;color:var(--dim)">유튜브·프리미어·다빈치·캡컷 등 <b>자막을 불러오는 도구라면 어디서나</b> 열립니다. 실제 영상 길이와 다르면 편집기에서 맞춰 주세요.</div>'; }
+      say("자막 파일을 저장했습니다.");
+    },
+    exportScript:function(){
+      if(guardBusy("export_script")) return;
+      if(!state.scenes||!state.scenes.length){ ONBO.card("export_empty","script"); return; }
+      app.commitOpenEditor();
+      var ir=buildIR(), L=[];
+      var SH={question:"질문형",fact:"사실형",story:"이야기형",compare:"비교형",number:"숫자형",quote:"인용형"};
+      L.push("# "+(ir.subject.name||"제목 없음")+" — 촬영 대본");
+      L.push("");
+      L.push("> "+(ir.subject.description||""));
+      L.push("> 목적 "+(ir.intent.goal||"-")+" · 대상 "+(ir.intent.audience||"-")+" · 톤 "+(ir.intent.tone||"-"));
+      L.push("> 장면 "+ir.structure.count+"개 · 총 "+ir.structure.totalSec+"초 · StoryboardIR "+ir.storyboardIR+" (확인코드 "+ir.checksum+")");
+      L.push("");
+      L.push("| # | 역할 | 길이 | 대사·자막 | 화면 | 세기·형태 |");
+      L.push("|---:|---|---:|---|---|---|");
+      ir.scenes.forEach(function(x){
+        var st2=(x.strength>0?("강화 x"+x.strength):x.strength<0?("약화 x"+Math.abs(x.strength)):"보통");
+        if(x.shape) st2+=" · "+(SH[x.shape]||x.shape);
+        L.push("| "+x.n+" | "+String(x.role||"").replace(/\|/g,"/")+" | "+x.durationSec+"초 | "+
+          String(x.text||"").replace(/\|/g,"/")+" | "+String(x.visualHint||"—").replace(/\|/g,"/")+" | "+st2+" |");
+      });
+      L.push("");
+      L.push("## 촬영 메모");
+      L.push("- 이 대본은 스토리보더가 만든 **표준 리소스(StoryboardIR "+ir.storyboardIR+")** 에서 자동 변환했습니다.");
+      L.push("- 문구는 편집해도 됩니다. 원본을 그대로 되살리려면 함께 받은 `.storyboard.json` 을 스토리보더에서 다시 여세요.");
+      if(ir.generator.partialRecovered) L.push("- ⚠️ 생성 당시 AI 응답이 잘려 **"+ir.generator.partialRecovered+"개 장면만 복구**되었습니다. 나머지는 기본 문구일 수 있습니다.");
+      L.push("- 화면 칸이 비어 있으면 스토리보더에서 [🎨 장면별 그림 힌트]를 눌러 채울 수 있습니다.");
+      var blob=new Blob(["\ufeff"+L.join("\n")],{type:"text/markdown;charset=utf-8"});
+      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+"_촬영대본.md",true);
+      ONBO.card("export_script",String(ir.scenes.length));
+      var b=document.getElementById("irbox");
+      if(b){ b.classList.add("on");
+        b.innerHTML='📋 <b>촬영 대본(.md)을 저장했어요.</b><div style="margin-top:6px">장면 '+ir.scenes.length+'개 · 표 한 장에 역할·길이·대사·화면·세기가 모두 들어 있습니다.</div>'+
+          '<div style="margin-top:6px;color:var(--dim)">노션·깃허브·옵시디언에 붙여넣으면 표로 보이고, 워드로 열어도 읽힙니다. <b>영상 제작자에게 넘기는 용도</b>예요.</div>'; }
+      say("촬영 대본을 저장했습니다.");
     },
     /* v0.14.0 문구 줄이기 제안 */
     shorten:function(i){
