@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온보 스튜디오 — pre-alpha v0.19.0 (생성 중 오조작 차단·복원 표식)</title>
+<title>온보 스튜디오 — pre-alpha v0.20.0 (표준 리소스 StoryboardIR v1·진행 표시·드래그 재정렬)</title>
 
 <!-- 이벤트 계약: 유일 정의처. 8스텝 분모 유지(인트로가 S2·S3 대체) -->
 <script id="onbo-contract" type="application/json">
-{"version":"0.19.0","steps":[
+{"version":"0.20.0","steps":[
  {"no":1,"anchor":"S1_load"},
  {"no":2,"anchor":"S2_vertical_select"},
  {"no":3,"anchor":"S3_source_input"},
@@ -104,7 +104,7 @@
   .fmtbar{margin-top:22px;padding-top:16px;border-top:1px dashed var(--line);}
   .fmtlabel{font-size:13.5px;color:var(--dim);margin-bottom:9px;}
   .fmttiles{display:flex;gap:8px;flex-wrap:wrap;}
-  .fmttile{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;}
+  .fmttile{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
   .fmttile.on{background:var(--panel2);border-color:var(--acc2);color:#e8ecf5;font-weight:700;cursor:default;}
   .fmtout{margin-top:12px;background:#12141c;border:1px solid var(--line);border-radius:10px;padding:14px;font-size:13.5px;line-height:1.65;color:#e8ecf5;}
   .fmtout h4{margin:0 0 4px;font-size:12px;color:var(--accbright);} .fmtout .blk{margin-bottom:12px;}
@@ -155,6 +155,31 @@
   .bulkbar button.danger{color:#ff8c8c;border-color:#4a2a2a;}
   .shortbtn{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--warn);background:#241c11;color:#ffd9a8;font-size:12px;cursor:pointer;margin-left:8px;}
   .busy .btn,.busy .fmttile,.busy .scenetools button,.busy .bulkbar button,.busy .cardops button,.busy .swatch,.busy .fontpick{opacity:.45;pointer-events:none;}
+  /* v0.20.0 진행 표시기 */
+  .genwrap{grid-column:1/-1;text-align:center;padding:34px 12px;color:var(--dim);font-size:14px;}
+  .genwrap .gtitle{font-size:15px;color:var(--txt);margin-bottom:14px;}
+  .gsteps{display:flex;flex-direction:column;gap:7px;max-width:340px;margin:0 auto;text-align:left;}
+  .gstep{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);padding:7px 11px;border:1px solid var(--line);border-radius:9px;background:#141822;}
+  .gstep.now{color:var(--txt);border-color:var(--accbright);background:#151d2e;}
+  .gstep.ok{color:var(--acc2);border-color:#2c4a3f;}
+  .gstep .gi{width:18px;text-align:center;flex:none;}
+  .gelapsed{margin-top:13px;font-size:12.5px;color:var(--dim);}
+  .gelapsed b{color:var(--accbright);}
+  .gslow{margin-top:9px;font-size:12.5px;color:var(--warn);}
+  /* v0.20.0 드래그 재정렬 */
+  .scene[draggable="true"]{cursor:grab;}
+  .scene.dragging{opacity:.4;}
+  .scene.dropbefore{box-shadow:-4px 0 0 0 var(--accbright) inset;}
+  .scene.dropafter{box-shadow:4px 0 0 0 var(--accbright) inset;}
+  .movebtns{position:absolute;right:8px;bottom:8px;display:flex;gap:5px;}
+  .movebtns button{min-width:44px;min-height:44px;border-radius:9px;border:1px solid var(--line);background:#171b26;color:var(--dim);font-size:15px;cursor:pointer;}
+  .movebtns button:hover{color:var(--txt);border-color:var(--accbright);}
+  .opsbox{margin-top:10px;font-size:12.5px;color:var(--dim);line-height:1.8;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:#141822;display:none;}
+  .opsbox.on{display:block;}
+  .opsbox .oprow{display:flex;gap:9px;align-items:baseline;}
+  .opsbox .opt2{color:var(--dim);font-size:11.5px;min-width:52px;}
+  .irbox{margin-top:10px;font-size:12.5px;line-height:1.8;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:#141822;display:none;}
+  .irbox.on{display:block;}
   .busybar{display:none;align-items:center;gap:10px;background:#151a24;border:1px solid var(--accbright);color:#cdd9f2;border-radius:10px;padding:11px 14px;margin:12px 0;font-size:13.5px;}
   .busybar.on{display:flex;}
   .cardops{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;}
@@ -185,7 +210,7 @@
 <body>
 <header>
   <h1>온보 <span>스튜디오</span></h1>
-  <span class="badge">PRE-ALPHA v0.19.0 · 생성 중 잠금 · 복원 표식 · 내부용</span>
+  <span class="badge">PRE-ALPHA v0.20.0 · 표준 리소스(IR) · 진행 표시 · 드래그 재정렬 · 내부용</span>
 </header>
 <main>
 
@@ -348,9 +373,21 @@
     <button data-testid="btn-diag" onclick="app.diagCode()">🩺 진단 코드</button>
     <button data-testid="slot-save" onclick="app.slotSave()">📥 슬롯에 보관</button>
     <span id="slotbar" style="display:inline-flex;gap:8px;flex-wrap:wrap"></span>
+    <button data-testid="btn-ops" onclick="app.toggleOps()">🧾 내가 바꾼 것 보기</button>
     <button data-testid="btn-share" onclick="app.shareLink()">🔗 공유 링크 복사</button>
     <button data-testid="btn-print" onclick="app.printView()">🖨 인쇄 / PDF로 저장</button>
     <span id="scenecount" style="align-self:center;font-size:12.5px;color:var(--dim)"></span>
+  </div>
+  <div class="opsbox" id="opsbox" data-testid="opsbox"></div>
+  <div class="irbox" id="irbox" data-testid="irbox"></div>
+  <div class="fmtbar" style="margin-top:14px">
+    <div class="fmtlabel">📦 <b>표준 리소스로 넘기기</b> — 다른 도구·제작자가 그대로 쓸 수 있는 파일입니다:</div>
+    <div class="fmttiles">
+      <button class="fmttile" data-testid="btn-export-ir" onclick="app.exportIR()">📦 표준 리소스 내보내기</button>
+      <button class="fmttile" data-testid="btn-import-ir" onclick="app.importIR()">📥 표준 리소스 가져오기</button>
+      <button class="fmttile" data-testid="btn-ir-check" onclick="app.irCheck()">🧪 왕복 검사</button>
+    </div>
+    <input type="file" id="ir-file" data-testid="ir-file" accept=".json,application/json" style="display:none" onchange="app.onIRFile(this)">
   </div>
   <div class="row"><button class="btn green" data-testid="btn-export" onclick="app.exportJSON()">JSON 내보내기 ⬇</button><button class="btn ghost" data-testid="btn-reset" onclick="location.reload()">처음부터(리셋)</button></div>
   <div class="fmtbar" style="margin-top:16px">
@@ -408,7 +445,7 @@
   </div>
 </div>
 <footer>
-  <span>v0.19.0 · 생성 중 잠금·복원 표식</span>
+  <span>v0.20.0 · 표준 리소스 IR·진행 표시·드래그 재정렬</span>
   <button data-testid="btn-theme" onclick="app.toggleTheme()" title="밝게/어둡게">◐ 테마</button>
   <div class="steps" id="stepdots"></div>
   <span id="rvcode" data-testid="rv-code" onclick="ONBO.copyRV(this)" title="클릭=복사">RV|—</span>
@@ -559,6 +596,32 @@ var app=(function(){
       return '<div class="histrow"><span>'+esc(h.name)+' · '+h.scenes.length+'장면 · '+dt+'</span><span style="display:flex;gap:6px"><button data-testid="hist-'+i+'" onclick="app.loadHist('+i+')">열기</button><button data-testid="histren-'+i+'" onclick="app.histRename('+i+')">이름</button><button data-testid="histdel-'+i+'" onclick="app.histDelete('+i+')">삭제</button></span></div>';
     }).join("");
   }
+  /* ===== v0.20.0 카드 조작 이력 — 2단계에서 사용자가 무엇을 했는지 눈에 보이게 ===== */
+  function opLog(kind,label,n){
+    state._ops=state._ops||[];
+    state._ops.push({t:Date.now(),kind:kind,label:label,n:(n==null?null:n)});
+    if(state._ops.length>200) state._ops.shift();
+    try{ renderOps(); }catch(e){}
+  }
+  function opTime(t){
+    var base=state._opsT0||(state._opsT0=t);
+    var s=Math.max(0,Math.round((t-base)/1000));
+    return (s<60? s+"초" : Math.floor(s/60)+"분 "+(s%60)+"초");
+  }
+  function renderOps(){
+    var b=document.getElementById("opsbox"); if(!b) return;
+    var ops=(state._ops||[]);
+    if(!ops.length){ b.innerHTML='<b>내가 바꾼 것</b><div style="margin-top:6px">아직 바꾼 것이 없어요. 카드를 옮기거나 강화·약화·변환하면 여기에 쌓입니다.</div>'; return; }
+    var counts={}; ops.forEach(function(o){counts[o.kind]=(counts[o.kind]||0)+1;});
+    var sum=Object.keys(counts).map(function(k){return k+" "+counts[k]+"회";}).join(" · ");
+    var rows=ops.slice(-12).reverse().map(function(o){
+      return '<div class="oprow"><span class="opt2">'+opTime(o.t)+'</span><span>'+esc(o.label)+(o.n!=null?(' <span style="color:var(--dim)">#'+o.n+'</span>'):'')+'</span></div>';
+    }).join("");
+    b.innerHTML='<b>내가 바꾼 것</b> <span style="color:var(--dim)">— 모두 '+ops.length+'회 ('+esc(sum)+')</span>'+
+      '<div style="margin-top:7px">'+rows+'</div>'+
+      (ops.length>12?'<div style="margin-top:6px;color:var(--dim)">최근 12개만 보여줍니다.</div>':'')+
+      '<div style="margin-top:8px;color:var(--dim)">되돌리려면 아래 <b>↩ 되돌리기</b>를 쓰세요.</div>';
+  }
   /* ===== v0.11.0 되돌리기(작업 취소) — 최근 10단계 ===== */
   var UNDO=[],REDO=[];
   function snapState(label){
@@ -578,6 +641,94 @@ var app=(function(){
       if(UNDO.length>10) UNDO.shift();
       REDO.length=0;
     }catch(e){}
+  }
+  /* ===== v0.20.0 StoryboardIR v1 — 표준 리소스 규격 =====
+     목적: 만들어진 스토리보드를 우리 앱 밖(다른 콘텐츠 메이커·툴)에서도 그대로 쓸 수 있는
+           도구 중립 자료로 내보내고 다시 들여온다. 3단계(b)의 핵심 산출물.
+     원칙: (1) 사람이 읽을 수 있는 JSON  (2) 우리 앱 전용 필드는 x_ 접두어로 분리
+           (3) 체크섬으로 절단·변조 감지  (4) 하위 호환 — 예전 내보내기 파일도 가져오기 가능 */
+  var IR_VERSION="1.0";
+  function irChecksum(scenes){
+    var s=(scenes||[]).map(function(x){return String(x.n||x.idx||"")+"|"+String(x.role||"")+"|"+String(x.text||"");}).join("\n");
+    var h=5381; for(var i=0;i<s.length;i++) h=(((h<<5)+h)+s.charCodeAt(i))>>>0;
+    return (h%65536).toString(16);
+  }
+  function buildIR(){
+    var sc=(state.scenes||[]).map(function(x,i){
+      return {n:i+1,role:String(x.role||""),text:String(x.text||""),durationSec:x.dur||3,
+        strength:x.str||0,shape:x.shape||null,visualHint:x.hint||null,
+        locked:!!x.lock,edited:!!(state._edited&&state._edited[x.idx])};
+    });
+    return {
+      storyboardIR:IR_VERSION,
+      id:"sb_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7),
+      createdAt:new Date().toISOString(),
+      generator:{app:"onbo-studio",appVersion:CONTRACT.version,engine:state._engine||"stub",model:state._model||null,
+        partialRecovered:state._salvaged||0,retried:!!state._retried},
+      intent:{goal:state.goal||null,audience:state.audience||null,tone:state.tone||"plain",lang:state.lang||"ko"},
+      subject:{name:nm(),description:ds(),features:(state.feats||[]).slice()},
+      source:{inputMode:(state.ir?"extracted":"manual"),extraction:(state.ir?state.ir.source:null)},
+      structure:{unit:"scene",count:sc.length,totalSec:sc.reduce(function(a,b){return a+(b.durationSec||3);},0)},
+      scenes:sc,
+      style:{brand:state.brand||"default",font:state.font||"sans"},
+      targets:{suggested:["short_video","onboarding_slides","landing_copy","tutorial_script"],
+        note:"이 파일은 특정 도구에 묶이지 않습니다. 장면 배열만 읽으면 어떤 형식으로도 다시 만들 수 있습니다."},
+      checksum:irChecksum(sc),
+      x_onbo:{contractVersion:CONTRACT.version,editedMap:JSON.parse(JSON.stringify(state._edited||{})),ops:(state._ops||[]).slice(-50)}
+    };
+  }
+  /* 검증기 — 가져오기 전에 반드시 통과해야 한다. 실패해도 앱을 멈추지 않고 이유를 사람 말로 알린다. */
+  function irValidate(o){
+    var err=[],warn=[];
+    if(!o||typeof o!=="object"){ return {ok:false,errors:["파일 내용이 JSON 객체가 아닙니다."],warnings:[],kind:null}; }
+    var kind=null;
+    if(o.storyboardIR) kind="ir";
+    else if(o.app==="onbo-studio"&&Array.isArray(o.scenes)) kind="legacy";
+    else return {ok:false,errors:["스토리보드 파일이 아닙니다. storyboardIR 또는 온보 스튜디오 내보내기 파일이어야 합니다."],warnings:[],kind:null};
+    if(kind==="ir"){
+      var maj=String(o.storyboardIR).split(".")[0];
+      if(maj!=="1") err.push("규격 버전 "+o.storyboardIR+" 은(는) 이 앱이 아직 읽지 못합니다(지원: 1.x).");
+      if(!Array.isArray(o.scenes)||!o.scenes.length) err.push("scenes 배열이 비어 있습니다.");
+      else{
+        o.scenes.forEach(function(x,i){
+          if(typeof x!=="object"||x===null){ err.push((i+1)+"번째 장면이 객체가 아닙니다."); return; }
+          if(!String(x.text||"").trim()) err.push((i+1)+"번째 장면에 text가 없습니다.");
+          if(x.durationSec!=null&&(isNaN(+x.durationSec)||+x.durationSec<=0)) warn.push((i+1)+"번째 장면의 길이가 이상해서 3초로 맞춥니다.");
+        });
+        if(o.structure&&o.structure.count!=null&&+o.structure.count!==o.scenes.length)
+          warn.push("표기된 장면 수("+o.structure.count+")와 실제 장면 수("+o.scenes.length+")가 다릅니다. 실제 값을 씁니다.");
+        if(o.checksum){
+          var c=irChecksum(o.scenes);
+          if(c!==o.checksum) warn.push("체크섬이 다릅니다(파일 "+o.checksum+" vs 계산 "+c+"). 파일이 편집됐거나 일부가 잘렸을 수 있어 그대로 읽되 표시해 둡니다.");
+        } else warn.push("체크섬이 없어 무결성을 확인하지 못했습니다.");
+      }
+    } else {
+      if(!o.scenes.length) err.push("scenes 배열이 비어 있습니다.");
+      warn.push("예전 형식(온보 내보내기)입니다. 읽을 수 있지만 표준 리소스 정보 일부는 비어 있습니다.");
+    }
+    return {ok:err.length===0,errors:err,warnings:warn,kind:kind};
+  }
+  function irToState(o,kind){
+    var sc=(o.scenes||[]).map(function(x,i){
+      if(kind==="legacy") return {idx:i+1,role:String(x.role||""),text:String(x.text||""),dur:(+x.dur>0?+x.dur:3),
+        hint:x.hint||undefined,str:x.str||0,shape:x.shape||undefined,lock:!!x.lock};
+      return {idx:i+1,role:String(x.role||""),text:String(x.text||""),dur:(+x.durationSec>0?+x.durationSec:3),
+        hint:x.visualHint||undefined,str:x.strength||0,shape:x.shape||undefined,lock:!!x.locked};
+    });
+    state.scenes=sc;
+    var it=(kind==="ir"?(o.intent||{}):{goal:(o.source&&o.source.meta&&o.source.meta.goal),audience:(o.source&&o.source.meta&&o.source.meta.audience),tone:(o.contentMode==="b"?"emotive":"plain")});
+    var sj=(kind==="ir"?(o.subject||{}):{name:(o.source&&o.source.raw&&o.source.raw.name),description:(o.source&&o.source.raw&&o.source.raw.desc),features:(o.source&&o.source.raw&&o.source.raw.feats)});
+    state.goal=it.goal||state.goal||"activation";
+    state.audience=it.audience||state.audience||null;
+    state.tone=it.tone||"plain";
+    state.lang=it.lang||"ko";
+    state.name=sj.name||state.name||"";
+    state.desc=sj.description||state.desc||"";
+    state.feats=(sj.features||state.feats||[]).slice();
+    var stl=o.style||{}; state.brand=stl.brand||"default"; state.font=stl.font||"sans";
+    state.selected=-1; state._s6saved=false;
+    state._engine=(o.generator&&o.generator.engine)||o.engine||state._engine||"stub";
+    state._model=(o.generator&&o.generator.model)||o.model||state._model||null;
   }
   /* ===== v0.11.0 공유 링크 — 서버 없이 URL에 결과를 담는다 ===== */
   function b64enc(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
@@ -771,6 +922,41 @@ var app=(function(){
       return out;
     }catch(e){return null;}
   }
+  /* v0.20.0 진행 표시 훅 — 생성 중 어느 단계인지 사용자에게 알린다.
+     실측 근거: 2026-07-28 실사용 로그에서 생성 24.0초(재시도 경로). 3~8초 안내와 실제가 크게 달랐다. */
+  var GEN={stage:0,t0:0,timer:null,retry:false};
+  var GEN_STEPS=[
+    {k:"prep",  ko:"입력 정리",       en:"Preparing input"},
+    {k:"ask",   ko:"AI에게 요청",     en:"Asking the AI"},
+    {k:"parse", ko:"문장 다듬기",     en:"Tidying the lines"},
+    {k:"draw",  ko:"화면에 그리기",   en:"Drawing the cards"}
+  ];
+  function genRender(){
+    var g=document.getElementById("scenegrid"); if(!g) return;
+    var el=g.querySelector(".genwrap"); if(!el) return;
+    var sec=((Date.now()-GEN.t0)/1000);
+    var rows="";
+    for(var i=0;i<GEN_STEPS.length;i++){
+      var cls=i<GEN.stage?"gstep ok":(i===GEN.stage?"gstep now":"gstep");
+      var ic=i<GEN.stage?"✓":(i===GEN.stage?"●":"○");
+      rows+='<div class="'+cls+'" data-testid="gstep-'+GEN_STEPS[i].k+'"><span class="gi">'+ic+'</span><span>'+(isEN()?GEN_STEPS[i].en:GEN_STEPS[i].ko)+
+        (i===1&&GEN.retry?(isEN()?' — retrying with a shorter request':' — 한 번 더 짧게 요청하는 중'):'')+'</span></div>';
+    }
+    var slow = sec>12 ? '<div class="gslow" data-testid="gen-slow">⏳ '+(isEN()?'Taking longer than usual. It is still working — please wait.':'평소보다 오래 걸리고 있어요. 멈춘 것이 아니라 계속 작업 중입니다.')+'</div>' : '';
+    el.innerHTML='<div class="gtitle">🤖 '+(isEN()?('Writing 10 scenes for “'+esc(nm())+'”…'):('「'+esc(nm())+'」의 10장면을 쓰는 중…'))+'</div>'+
+      '<div class="gsteps">'+rows+'</div>'+
+      '<div class="gelapsed" data-testid="gen-elapsed">'+(isEN()?'Elapsed ':'경과 ')+'<b>'+sec.toFixed(1)+(isEN()?'s':'초')+'</b> · '+(isEN()?'usually 5–25s':'보통 5~25초')+'</div>'+slow;
+  }
+  function genStart(){
+    GEN.stage=0; GEN.retry=false; GEN.t0=Date.now();
+    var g=document.getElementById("scenegrid");
+    if(g) g.innerHTML='<div class="genwrap" data-testid="genwrap"></div>';
+    genRender();
+    if(GEN.timer) clearInterval(GEN.timer);
+    GEN.timer=setInterval(genRender,400);
+  }
+  function genStage(i,retry){ GEN.stage=i; if(retry) GEN.retry=true; ONBO.card("gen_stage",(GEN_STEPS[i]?GEN_STEPS[i].k:String(i))+(retry?":retry":"")); genRender(); }
+  function genStop(){ if(GEN.timer){clearInterval(GEN.timer);GEN.timer=null;} }
   async function askOnce(prompt){
     var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort();},25000);
     try{
@@ -786,15 +972,16 @@ var app=(function(){
      → 짧은 프롬프트를 먼저 쓰고, 그래도 실패하면 더 줄여 1회 재시도한다. */
   async function realEngine(goal,name,desc,feats,audience,tone){
     state._salvaged=0; state._retried=0;
+    genStage(1);
     var d1=await askOnce(buildPromptShort(goal,name,desc,feats,audience,tone));
-    if(d1){ var s1=parseScenes(d1.text); if(s1){ state._model=d1.model||"gemini"; return s1; } }
+    if(d1){ genStage(2); var s1=parseScenes(d1.text); if(s1){ state._model=d1.model||"gemini"; return s1; } }
     /* 재시도: 역할 목록만 남긴 최소 프롬프트 */
-    state._retried=1;
+    state._retried=1; genStage(1,true);
     var mini=isEN()
       ? ('10 onboarding lines for "'+name+'" ('+desc+'). JSON only: [{"role":"Hook","text":""}] exactly 10, roles: '+ROLE_SLOTS_EN.join(","))
       : ('"'+name+'"('+desc+') 온보딩 10문구. JSON만: [{"role":"훅","text":""}] 정확히 10개, 역할: '+ROLE_SLOTS.join(","));
     var d2=await askOnce(mini);
-    if(d2){ var s2=parseScenes(d2.text); if(s2){ state._model=(d2.model||"gemini")+"+retry"; return s2; } }
+    if(d2){ genStage(2); var s2=parseScenes(d2.text); if(s2){ state._model=(d2.model||"gemini")+"+retry"; return s2; } }
     return null;
   }
   function drawStrip(){var s=document.getElementById("strip");if(!s)return;_goal=state.goal||"activation";var sc=stubEngine();var pick=[0,3,9],h="";for(var j=0;j<3;j++){var x=sc[pick[j]];h+='<div class="pcard flash"><div class="pn">#'+(pick[j]+1)+'</div><div class="pr">'+x.role+'</div><p>'+esc(x.text)+'</p></div>';}s.innerHTML=h;}
@@ -1128,7 +1315,9 @@ var app=(function(){
       if(s.str) chips+='<span class="warnchip" data-testid="str-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">'+(s.str>0?('🔥 강화 x'+s.str):('🌿 약화 x'+Math.abs(s.str)))+'</span>';
       if(s.shape) chips+='<span class="warnchip" data-testid="shape-'+s.idx+'" style="border-color:#7b83c9;color:#b0b8ff">'+({question:'❓ 질문형',fact:'📊 사실형',story:'📖 이야기형'}[s.shape]||s.shape)+'</span>';
       if(s.lock) chips+='<span class="warnchip" data-testid="lock-'+s.idx+'" style="border-color:var(--acc2);color:var(--acc2)">🔒 잠김 — 일괄 변경에서 보호</span>';
-      html+='<div class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+((state._pick&&state._pick[i])?" picked":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><span class="selbox" data-testid="pick-'+s.idx+'" onclick="event.stopPropagation();app.togglePick('+i+')" title="여러 장면 고르기">'+((state._pick&&state._pick[i])?"☑":"☐")+'</span><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span></div>';}
+      html+='<div draggable="true" ondragstart="app.dragStart(event,'+i+')" ondragover="app.dragOver(event,'+i+')" ondragleave="app.dragLeave(event,'+i+')" ondrop="app.dragDrop(event,'+i+')" ondragend="app.dragEnd(event)" class="scene'+(i===state.selected?" sel":"")+(state._edited&&state._edited[s.idx]?" done":"")+(rk.length?" risky":"")+((state._pick&&state._pick[i])?" picked":"")+'" data-testid="scene-'+s.idx+'" tabindex="0" role="button" onclick="app.openEditor('+i+')" onkeydown="app.kbIdx(event,'+i+')"><span class="selbox" data-testid="pick-'+s.idx+'" onclick="event.stopPropagation();app.togglePick('+i+')" title="여러 장면 고르기">'+((state._pick&&state._pick[i])?"☑":"☐")+'</span><div class="num">#'+s.idx+' · '+s.dur+'s</div><div class="role">'+s.role+'</div><p>'+esc(s.text)+'</p><span class="rolehint">'+esc(roleHint(s.role))+'</span>'+hint+(chips?'<div>'+chips+'</div>':'')+'<span class="editbtn">'+((state._edited&&state._edited[s.idx])?"✓ 고침":"✏️ 고치기")+'</span>'+
+        '<span class="movebtns"><button type="button" data-testid="cardup-'+s.idx+'" title="앞으로 옮기기" aria-label="'+s.idx+'번 장면을 앞으로 옮기기" onclick="event.stopPropagation();app.moveAt('+i+',-1)">↑</button>'+
+        '<button type="button" data-testid="carddown-'+s.idx+'" title="뒤로 옮기기" aria-label="'+s.idx+'번 장면을 뒤로 옮기기" onclick="event.stopPropagation();app.moveAt('+i+',1)">↓</button></span></div>';}
     state._riskN=riskN;
     var picked=(state._pick||[]).filter(Boolean).length;
     var bb=document.getElementById("bulkbar"), bc=document.getElementById("bulkcount");
@@ -1138,7 +1327,7 @@ var app=(function(){
       cc.innerHTML="현재 "+state.scenes.length+"장면 · 약 "+tot+"초"+
         (riskN?' · <span style="color:var(--warn)">⚠️ 확인 필요한 문구 '+riskN+'개</span>':'')+
         (longN?' · <span style="color:var(--dim)">✂️ 긴 문구 '+longN+'개</span>':'');}
-    try{renderFontBar();applyFont();}catch(e){}}
+    try{renderFontBar();applyFont();renderOps();}catch(e){}}
   /* v0.19.0 F-28 대응: 생성이 끝나기 전에 내보내기가 눌리면 빈 스토리보드가 저장된다.
      실측 근거: 2026-07-28 실사용 로그에서 S7(내보내기)이 S4(생성) 완료보다 6.2초 먼저 발생. */
   function setBusy(on){
@@ -1162,7 +1351,7 @@ var app=(function(){
     setBusy(true);
     document.getElementById("scenes-title").textContent="「"+nm()+"」 온보딩 스토리";
     show("scr-scenes");
-    document.getElementById("scenegrid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--dim);font-size:14px">🤖 AI가 「'+esc(nm())+'」의 10장면을 쓰는 중…<br><span style="font-size:12px">보통 3~8초 걸려요</span></div>';
+    genStart();
     var _t0=Date.now();
     var real=await realEngine(state.goal,nm(),ds(),feats(),state.audience,state.tone);
     perf("생성",Date.now()-_t0);
@@ -1174,6 +1363,7 @@ var app=(function(){
     if(ei) ei.textContent = real
       ? (state._salvaged ? ("엔진: 진짜 AI 일부 복구 "+state._salvaged+"/10 (서버 응답이 잘림)") : ("엔진: 진짜 AI("+(state._model||"gemini")+")"+(state._retried?" · 재시도로 성공":"")))
       : ("엔진: 기본 문구 — "+failLabel(LASTFAIL));
+    genStage(3); genStop();
     ONBO.step(4,"exit"); ONBO.step(5,"enter"); /*STEP:5*/
     var _t1=Date.now();
     renderScenes(); renderBrandBar(); renderLangBar(); renderTpl(); renderSlots(); saveDraft();
@@ -1516,6 +1706,7 @@ var app=(function(){
       if(kind==='boost') sc.str=Math.min(2,(sc.str||0)+1);
       if(kind==='soften') sc.str=Math.max(-2,(sc.str||0)-1);
       if(kind!=='boost'&&kind!=='soften') sc.shape=kind;
+      opLog("변환",({boost:"강화",soften:"약화",question:"질문형으로 바꿈",fact:"사실형으로 바꿈",story:"이야기형으로 바꿈"}[kind]||kind),sc.idx);
       app.strengthLabel();
       if(st) st.innerHTML=(byAI
         ? ('✨ 진짜 AI로 <b>'+LABEL+'</b>했어요'+(rr.retried?' (짧게 다시 물어 성공)':'')+'. 마음에 들면 <b>[이 장면 저장]</b>.')
@@ -2083,6 +2274,138 @@ var app=(function(){
       renderScenes(); saveDraft();
       var n=document.getElementById("nudge");
       if(n) n.innerHTML='↕️ 장면 순서를 바꿨어요. 번호는 자동으로 다시 매겨집니다.';
+    },
+    /* v0.20.0 카드 위치 옮기기 — 편집기를 열지 않고 카드에서 바로. 모바일에서도 눌러서 옮길 수 있다. */
+    moveAt:function(i,dir){
+      if(guardBusy("move")) return;
+      var j=i+dir; if(i<0||i>=state.scenes.length||j<0||j>=state.scenes.length) return;
+      snapshot("순서 변경");
+      var a=state.scenes[i]; state.scenes[i]=state.scenes[j]; state.scenes[j]=a;
+      for(var k=0;k<state.scenes.length;k++) state.scenes[k].idx=k+1;
+      if(state.selected===i) state.selected=j; else if(state.selected===j) state.selected=i;
+      ONBO.card("scene_move_card",String(dir));
+      opLog("순서",(dir<0?"앞으로 옮김":"뒤로 옮김"),j+1);
+      renderScenes(); saveDraft();
+      var n=document.getElementById("nudge");
+      if(n) n.innerHTML='↕️ <b>'+(j+1)+'번 자리</b>로 옮겼어요. 번호는 자동으로 다시 매겨집니다. 되돌리려면 <b>[↩ 되돌리기]</b>.';
+      say((j+1)+"번 자리로 옮겼습니다.");
+    },
+    /* 드래그로 옮기기 — 마우스 사용자용. 터치 기기는 위 ↑↓ 버튼을 쓴다. */
+    dragStart:function(e,i){
+      if(state._busy){ e.preventDefault(); return; }
+      state._drag=i;
+      try{ e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",String(i)); }catch(x){}
+      var el=e.currentTarget; if(el) el.classList.add("dragging");
+    },
+    dragOver:function(e,i){
+      if(state._drag==null||state._drag===i) return;
+      e.preventDefault();
+      var el=e.currentTarget; if(!el) return;
+      el.classList.remove("dropbefore","dropafter");
+      el.classList.add(i<state._drag?"dropbefore":"dropafter");
+    },
+    dragLeave:function(e){ var el=e.currentTarget; if(el) el.classList.remove("dropbefore","dropafter"); },
+    dragEnd:function(){ state._drag=null; document.querySelectorAll(".scene").forEach(function(x){x.classList.remove("dragging","dropbefore","dropafter");}); },
+    dragDrop:function(e,i){
+      e.preventDefault();
+      var from=state._drag; app.dragEnd();
+      if(from==null||from===i) return;
+      snapshot("드래그 재정렬");
+      var moved=state.scenes.splice(from,1)[0];
+      state.scenes.splice(i,0,moved);
+      for(var k=0;k<state.scenes.length;k++) state.scenes[k].idx=k+1;
+      state.selected=-1;
+      ONBO.card("scene_drag",from+"->"+i);
+      opLog("순서","드래그로 "+(from+1)+"번 → "+(i+1)+"번",i+1);
+      renderScenes(); saveDraft();
+      var n=document.getElementById("nudge");
+      if(n) n.innerHTML='↕️ 드래그로 <b>'+(from+1)+'번</b>을 <b>'+(i+1)+'번 자리</b>에 놓았어요. 되돌리려면 <b>[↩ 되돌리기]</b>.';
+    },
+    toggleOps:function(){
+      var b=document.getElementById("opsbox"); if(!b) return;
+      var on=!b.classList.contains("on"); b.classList.toggle("on",on);
+      if(on){ renderOps(); ONBO.card("ops_open","1"); }
+    },
+    /* ===== v0.20.0 StoryboardIR v1 ===== */
+    exportIR:function(){
+      if(guardBusy("export_ir")) return;
+      if(!state.scenes||state.scenes.length<1){
+        var s0=document.getElementById("cz-status");
+        if(s0) s0.innerHTML='<span class="warn">아직 만들어진 장면이 없어요. 생성이 끝난 뒤 내보내세요.</span>';
+        ONBO.card("export_empty","ir"); return;
+      }
+      app.commitOpenEditor();
+      var ir=buildIR();
+      var blob=new Blob([JSON.stringify(ir,null,2)],{type:"application/json"});
+      dlFile(URL.createObjectURL(blob),(nm()||"onbo")+".storyboard.json",true);
+      ONBO.card("export_ir",String(ir.scenes.length));
+      var b=document.getElementById("irbox");
+      if(b){ b.classList.add("on");
+        b.innerHTML='📦 <b>표준 리소스 파일을 저장했어요.</b><div style="margin-top:6px">'+
+          '파일 이름: <b>'+esc((nm()||"onbo")+".storyboard.json")+'</b> · 장면 '+ir.scenes.length+'개 · 규격 StoryboardIR '+IR_VERSION+' · 확인코드 '+ir.checksum+'</div>'+
+          '<div style="margin-top:6px;color:var(--dim)">이 파일은 온보 전용이 아니라 <b>다른 편집 도구·영상 제작자에게 그대로 넘길 수 있는 자료</b>입니다. 여기 앱에서 다시 열려면 [📥 표준 리소스 가져오기]를 쓰세요.</div>'; }
+      say("표준 리소스 파일을 저장했습니다.");
+    },
+    importIR:function(){
+      if(guardBusy("import_ir")) return;
+      var el=document.getElementById("ir-file"); if(el) el.click();
+    },
+    onIRFile:function(inp){
+      var f=inp&&inp.files&&inp.files[0]; if(!f) return;
+      var b=document.getElementById("irbox"); if(b) b.classList.add("on");
+      var fr=new FileReader();
+      fr.onerror=function(){ if(b) b.innerHTML='<span class="warn">파일을 읽지 못했어요.</span> 다른 파일로 다시 시도해 주세요.'; ONBO.card("import_ir","readfail"); inp.value=""; };
+      fr.onload=function(){
+        var o=null;
+        try{ o=JSON.parse(String(fr.result)); }
+        catch(e){ if(b) b.innerHTML='<span class="warn">JSON 형식이 아니라 읽을 수 없어요.</span><div style="margin-top:5px;color:var(--dim)">내보내기로 만든 <b>.storyboard.json</b> 파일을 골라 주세요. 지금 파일은 그대로 두었고 화면도 바뀌지 않았습니다.</div>'; ONBO.card("import_ir","badjson"); inp.value=""; return; }
+        var v=irValidate(o);
+        if(!v.ok){
+          if(b) b.innerHTML='<span class="warn">가져오지 못했어요.</span><div style="margin-top:5px">'+v.errors.map(esc).join("<br>")+'</div><div style="margin-top:5px;color:var(--dim)">지금 화면의 내용은 <b>그대로 두었습니다.</b></div>';
+          ONBO.card("import_ir","invalid"); inp.value=""; return;
+        }
+        snapshot("표준 리소스 가져오기");
+        irToState(o,v.kind);
+        state._ops=[]; state._opsT0=null;
+        var t=document.getElementById("scenes-title");
+        if(t) t.textContent="「"+nm()+"」 "+state.scenes.length+"장면 스토리";
+        show("scr-scenes");
+        renderScenes(); try{renderBrandBar();renderLangBar();renderTpl();renderSlots();}catch(e){}
+        saveDraft();
+        ONBO.card("import_ir",(v.kind||"?")+":"+state.scenes.length);
+        if(b) b.innerHTML='📥 <b>'+state.scenes.length+'개 장면을 가져왔어요.</b>'+
+          '<div style="margin-top:6px;color:var(--dim)">형식: '+(v.kind==="ir"?("StoryboardIR "+esc(String(o.storyboardIR))):"예전 온보 내보내기 파일")+'</div>'+
+          (v.warnings.length?('<div style="margin-top:6px;color:var(--warn)">확인해 주세요 — '+v.warnings.map(esc).join("<br>")+'</div>'):'')+
+          '<div style="margin-top:6px;color:var(--dim)">잘못 가져왔다면 <b>[↩ 되돌리기]</b>로 직전 상태로 돌아갑니다.</div>';
+        say(state.scenes.length+"개 장면을 가져왔습니다.");
+        inp.value="";
+      };
+      fr.readAsText(f);
+    },
+    /* 라운드트립 자가검증 — 내보낸 그대로 다시 읽으면 같은가. 릴리스 게이트 11의 앱 내 증거. */
+    irCheck:function(){
+      var b=document.getElementById("irbox"); if(b) b.classList.add("on");
+      if(!state.scenes||!state.scenes.length){ if(b) b.innerHTML='<span class="warn">장면이 없어 검사할 수 없어요.</span>'; return {ok:false,reason:"empty"}; }
+      var before=buildIR();
+      var txt=JSON.stringify(before);
+      var after=null; try{ after=JSON.parse(txt); }catch(e){ if(b) b.innerHTML='<span class="warn">직렬화 실패</span>'; return {ok:false,reason:"stringify"}; }
+      var v=irValidate(after);
+      var lines=[], ok=true;
+      function chk(name,cond,detail){ lines.push((cond?"✅":"❌")+" "+name+(detail?(" — "+detail):"")); if(!cond) ok=false; }
+      chk("규격 검증 통과",v.ok,v.errors.join(" / "));
+      chk("장면 수 보존",after.scenes.length===state.scenes.length,after.scenes.length+" vs "+state.scenes.length);
+      var same=after.scenes.every(function(x,i){return String(x.text)===String(state.scenes[i].text)&&String(x.role)===String(state.scenes[i].role);});
+      chk("문구·역할 보존",same);
+      chk("확인코드 일치",irChecksum(after.scenes)===before.checksum,irChecksum(after.scenes)+" vs "+before.checksum);
+      var durOK=after.scenes.every(function(x,i){return (+x.durationSec)===(+(state.scenes[i].dur||3));});
+      chk("길이 보존",durOK);
+      var shapeOK=after.scenes.every(function(x,i){return (x.strength||0)===(state.scenes[i].str||0)&&String(x.shape||"")===String(state.scenes[i].shape||"");});
+      chk("세기·형태 보존",shapeOK);
+      ONBO.card("ir_check",ok?"pass":"fail");
+      if(b) b.innerHTML='🧪 <b>표준 리소스 왕복 검사</b> — '+(ok?'<span style="color:var(--acc2)">모두 통과</span>':'<span class="warn">문제 있음</span>')+
+        '<div style="margin-top:6px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.9" data-testid="ir-check-detail">'+lines.map(esc).join("<br>")+'</div>'+
+        '<div style="margin-top:6px;color:var(--dim)">내보낸 파일을 다시 읽었을 때 내용이 그대로인지 스스로 확인한 결과입니다.</div>';
+      return {ok:ok,lines:lines};
     },
     histRename:function(i){
       var all=histAll(); if(!all[i]) return;
