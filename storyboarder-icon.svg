@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">스토리보더 앱 아이콘</title>
+  <desc id="desc">짙은 배경 위 연두색 SB 글자와 근거에서 행동으로 이어지는 세 점</desc>
+  <rect width="512" height="512" rx="118" fill="#0a0d12"/>
+  <rect x="66" y="66" width="380" height="380" rx="96" fill="#141a23" stroke="#2a3342" stroke-width="8"/>
+  <path d="M130 352h252" stroke="#d7ff52" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="148" cy="352" r="28" fill="#87c9ff"/>
+  <circle cx="256" cy="352" r="28" fill="#c2a8ff"/>
+  <circle cx="364" cy="352" r="28" fill="#d7ff52"/>
+  <text x="256" y="286" text-anchor="middle" font-family="Arial, sans-serif" font-size="176" font-weight="900" letter-spacing="-18" fill="#f6f7f2">SB</text>
+</svg>

@@ -1,0 +1,27 @@
+{
+  "name": "스토리보더 — YouTube Benchmark Workspace",
+  "short_name": "스토리보더",
+  "description": "유튜브 비교 근거를 실제 수정 작업으로 연결하는 크리에이터 워크벤치",
+  "id": "./onbo.html",
+  "start_url": "./onbo.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090b0f",
+  "theme_color": "#0a0d12",
+  "lang": "ko-KR",
+  "categories": ["productivity", "utilities", "education"],
+  "icons": [
+    {
+      "src": "storyboarder-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "오늘의 판단", "short_name": "오늘", "url": "./onbo.html#today" },
+    { "name": "프로젝트", "short_name": "프로젝트", "url": "./onbo.html#projects" },
+    { "name": "실험", "short_name": "실험", "url": "./onbo.html#experiments" }
+  ]
+}
