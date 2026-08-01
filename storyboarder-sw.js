@@ -1,7 +1,7 @@
 'use strict';
 
 var CACHE = 'storyboarder-v0.40.0';
-var CORE = ['./', './index.html', './onbo.html', './app.css', './app.js', './storyboarder.webmanifest', './storyboarder-icon.svg'];
+var CORE = ['./', './index.html', './onbo.html', './app.css', './app.js', './storyboarder.webmanifest', './storyboarder-icon.svg', './storyboarder-icon-192.png', './storyboarder-icon-512.png'];
 
 self.addEventListener('install', function (event) {
   event.waitUntil(caches.open(CACHE).then(function (cache) {
